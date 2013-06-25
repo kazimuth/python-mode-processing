@@ -1,0 +1,8 @@
+# Java things #
+*.class
+*.jar
+*.war
+*.ear
+
+# Other things #
+*.bat
