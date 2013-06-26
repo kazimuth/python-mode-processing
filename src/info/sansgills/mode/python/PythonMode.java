@@ -11,7 +11,7 @@ import processing.mode.java.JavaMode;
  * Python Mode. Yeah.
  *
  */
-public class PythonMode extends JavaMode {
+public class PythonMode extends Mode {
     public PythonMode(Base base, File folder) {
         super(base, folder);
     }
@@ -72,7 +72,7 @@ public class PythonMode extends JavaMode {
                 return jMode.getClassLoader();
             }
         }
-        return null;  // badness
+        return null;  // something broke
     }
 
 }
