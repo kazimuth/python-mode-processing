@@ -1,10 +1,7 @@
 package info.sansgills.mode.python;
 
 import java.io.File;
-import processing.app.Base;
-import processing.app.Editor;
-import processing.app.EditorState;
-import processing.app.Mode;
+import processing.app.*;
 import processing.mode.java.JavaMode;
 
 /**
@@ -30,15 +27,16 @@ public class PythonMode extends Mode {
      * Create a new editor associated with this mode.
      */
     public Editor createEditor(Base base, String path, EditorState state) {
-		return null;
+		return new PythonEditor(base, path, state, this);
     }
     
 
     /**
      * Returns the default extension for this editor setup.
+     * NOTE: no '.' at the beginning, that causes problems!
      */
     public String getDefaultExtension() {
-        return ".pde";
+        return "pde";
     }
     
 
@@ -46,16 +44,27 @@ public class PythonMode extends Mode {
      * Returns a String[] array of proper extensions.
      */
     public String[] getExtensions() {
-        return new String[]{".pde", ".py"};
+        return new String[]{"pde", "py"};
     }
     
+    /**
+     * Returns the core library; in this case, a java library, because, jython.
+     */
+    @Override
+    public Library getCoreLibrary() {
+        if (coreLibrary == null) {
+          File coreFolder = Base.getContentFile("core");
+          coreLibrary = new Library(coreFolder);
+        }
+        return coreLibrary;
+      }
 
     /**
      * Get array of file/directory names that needn't be copied during "Save
      * As".
      */
     public String[] getIgnorable() {
-        return null;
+        return new String[]{};
     }
     
     

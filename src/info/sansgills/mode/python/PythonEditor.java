@@ -33,9 +33,11 @@ public class PythonEditor extends Editor {
 	@Override
 	public void deactivateRun() {
 		//deactivate toolbar 'run' icon
+		toolbar.deactivate(PythonToolbar.RUN);
 	}
 	public void deactivateExport() {
 		//deactivate toolbar 'export' icon
+		toolbar.deactivate(PythonToolbar.EXPORT);
 	}
 	
 	
@@ -51,25 +53,24 @@ public class PythonEditor extends Editor {
 	 */
 	@Override
 	public JMenu buildFileMenu() {
-		return null;
+		return new JMenu("File");
 	}
 	@Override
 	public JMenu buildHelpMenu() {
-		return null;
+		return new JMenu("Help");
 	}
 	@Override
 	public JMenu buildSketchMenu() {
-		return null;
+		return new JMenu("Sketch");
 	}
 
 	
 	
 	@Override
 	public Formatter createFormatter() {
-		// TODO Auto-generated method stub
-		return null;
+		return new PythonFormat();
 	}
-
+	
 	@Override
 	public EditorToolbar createToolbar() {
 		return new PythonToolbar(this, base);
