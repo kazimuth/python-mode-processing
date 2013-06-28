@@ -1,6 +1,10 @@
 package info.sansgills.mode.python;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 
 import processing.app.Base;
 import processing.app.Editor;
@@ -8,6 +12,7 @@ import processing.app.EditorState;
 import processing.app.EditorToolbar;
 import processing.app.Formatter;
 import processing.app.Mode;
+import processing.app.Toolkit;
 
 /**
  * 
@@ -53,15 +58,50 @@ public class PythonEditor extends Editor {
 	 */
 	@Override
 	public JMenu buildFileMenu() {
-		return new JMenu("File");
+		//Okay, this is kinda weird
+		String appTitle = PythonToolbar.getTitle(PythonToolbar.EXPORT, false);  //get export string
+		
+		JMenuItem exportApplication = Toolkit.newJMenuItem(appTitle, 'E'); //set it up
+		
+		exportApplication.addActionListener(new ActionListener() { //yadda yadda
+			public void actionPerformed(ActionEvent e) {
+				handleExportApplication();
+			}
+		});
+		return buildFileMenu(new JMenuItem[] { exportApplication }); //and then call the SUPERCLASS method. weird.
 	}
+
 	@Override
-	public JMenu buildHelpMenu() {
-		return new JMenu("Help");
+	public JMenu buildHelpMenu() { //TODO implement
+		JMenu menu = new JMenu("Help");
+		JMenuItem item = new JMenuItem("help is for weaklings"); 
+		item.setEnabled(false);
+		menu.add(item);
+		return menu;
 	}
 	@Override
 	public JMenu buildSketchMenu() {
-		return new JMenu("Sketch");
+		JMenuItem runItem = Toolkit.newJMenuItem(PythonToolbar.getTitle(PythonToolbar.RUN, false), 'R');
+	    runItem.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent e) {
+	        handleRun();
+	      }
+	    });
+
+	    JMenuItem presentItem = Toolkit.newJMenuItemShift(PythonToolbar.getTitle(PythonToolbar.RUN, true), 'R');
+	    presentItem.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent e) {
+	        handlePresent();
+	      }
+	    });
+
+	    JMenuItem stopItem = new JMenuItem(PythonToolbar.getTitle(PythonToolbar.STOP, false));
+	    stopItem.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent e) {
+	        handleStop();
+	      }
+	    });
+	    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
 	}
 
 	
