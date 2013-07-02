@@ -3,9 +3,12 @@ package info.sansgills.mode.python;
 import java.awt.Image;
 import java.awt.event.MouseEvent;
 
+import javax.swing.JPopupMenu;
+
 import processing.app.Base;
 import processing.app.Editor;
 import processing.app.EditorToolbar;
+import processing.mode.java.JavaEditor;
 
 
 
@@ -39,8 +42,40 @@ public class PythonToolbar extends EditorToolbar {
 	}
 
 	@Override
-	public void handlePressed(MouseEvent arg0, int arg1) {
-		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
+	public void handlePressed(MouseEvent e, int sel) {
+		boolean shift = e.isShiftDown();
+		PythonEditor peditor = (PythonEditor) editor;
+
+		switch (sel) {
+		case RUN:
+			if (shift) {
+				peditor.handlePresent();
+			} else {
+				peditor.handleRun();
+			}
+			break;
+
+		case STOP:
+			peditor.handleStop();
+			break;
+
+		case OPEN:
+			JPopupMenu popup = editor.getMode().getToolbarMenu().getPopupMenu(); //the 'open' dropdown
+			popup.show(this, e.getX(), e.getY());
+			break;
+
+		case NEW:
+			base.handleNew();
+			break;
+
+		case SAVE:
+			peditor.handleSave(false);
+			break;
+
+		case EXPORT:
+			peditor.handleExportApplication();
+			break;
+		}
 	}
 
 	@Override

@@ -27,21 +27,15 @@ public class PythonEditor extends Editor {
 		super(base, path, state, mode);
 	}
 	
-	
-	
 	public String getCommentPrefix() {
 		return "#";
 	}
 	
-	
-	
 	@Override
-	public void deactivateRun() {
-		//deactivate toolbar 'run' icon
+	public void deactivateRun() {		//deactivate toolbar 'run' icon
 		toolbar.deactivate(PythonToolbar.RUN);
 	}
-	public void deactivateExport() {
-		//deactivate toolbar 'export' icon
+	public void deactivateExport() {	//deactivate toolbar 'export' icon
 		toolbar.deactivate(PythonToolbar.EXPORT);
 	}
 	
@@ -121,27 +115,32 @@ public class PythonEditor extends Editor {
 	 * Handlers
 	 */
 	public void handleExportApplication() {
-		
+		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
 	public void handleRun() {
-		
+		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
 	public void handlePresent() {
-		
+		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
 	public void handleStop() {
-		
+		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
 	public void handleSave() {
-		
+		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
 	public boolean handleSaveAs() {
+		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 		return false;
 	}
 	@Override
 	public void handleImportLibrary(String arg0) {
 		// TODO Auto-generated method stub
 	}
-
-
+	
+	@Override
+	public void statusError(String what){ //sketch died for some reason
+		super.statusError(what);
+		deactivateRun();
+	}
 }

@@ -2,7 +2,11 @@ package info.sansgills.mode.python;
 
 import processing.app.Formatter;
 
-
+/**
+ * 
+ * Class used when the user selects the 'format' option from the menu.
+ * 
+ */
 
 public class PythonFormat implements Formatter {
 	public PythonFormat(){}
