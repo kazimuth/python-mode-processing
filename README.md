@@ -17,4 +17,4 @@ Currently working on:
 Future work:
 - Preprocessor
 - Autoindent & syntax highlighting
-- REPL
+- REPL for live coding

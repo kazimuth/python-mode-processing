@@ -13,6 +13,7 @@ import processing.app.EditorToolbar;
 import processing.app.Formatter;
 import processing.app.Mode;
 import processing.app.Toolkit;
+import processing.mode.java.JavaToolbar;
 
 /**
  * 
@@ -20,11 +21,20 @@ import processing.app.Toolkit;
  * Superclass handles most of the nitty-gritty; we just have to manage python-specific things, like running and stopping.
  *
  */
-
+@SuppressWarnings("serial")
 public class PythonEditor extends Editor {
+	
+	PythonMode pyMode;
+	PythonKeyListener listener; //handles syntax highlighting via black magic
+	
+	private PythonRunner runner;
+	
 	
 	protected PythonEditor(final Base base, String path, EditorState state, final Mode mode) {
 		super(base, path, state, mode);
+		
+		listener = new PythonKeyListener(this, textarea); //black magic
+		pyMode = (PythonMode) mode; //convenience
 	}
 	
 	public String getCommentPrefix() {
@@ -43,7 +53,7 @@ public class PythonEditor extends Editor {
 	
 	@Override
 	public void internalCloseRunner() {
-		// TODO figure out what this does
+		handleStop(); //Java Mode does this, copying on faith
 	}
 	
 	
@@ -62,7 +72,7 @@ public class PythonEditor extends Editor {
 				handleExportApplication();
 			}
 		});
-		return buildFileMenu(new JMenuItem[] { exportApplication }); //and then call the SUPERCLASS method. weird.
+		return buildFileMenu(new JMenuItem[] { exportApplication }); //and then call the SUPERCLASS method
 	}
 
 	@Override
@@ -73,8 +83,9 @@ public class PythonEditor extends Editor {
 		menu.add(item);
 		return menu;
 	}
+	
 	@Override
-	public JMenu buildSketchMenu() {
+	public JMenu buildSketchMenu() { //the 'Sketch' menu, if that wasn't obvious
 		JMenuItem runItem = Toolkit.newJMenuItem(PythonToolbar.getTitle(PythonToolbar.RUN, false), 'R');
 	    runItem.addActionListener(new ActionListener() {
 	      public void actionPerformed(ActionEvent e) {
@@ -117,25 +128,47 @@ public class PythonEditor extends Editor {
 	public void handleExportApplication() {
 		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
+	
 	public void handleRun() {
 		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
+	
 	public void handlePresent() {
 		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
-	public void handleStop() {
-		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
+	
+	public void handleStop() { //copied wholesale from Java Mode
+		toolbar.activate(PythonToolbar.STOP);
+		try {
+	      if (runner != null) {
+	        runner.close();  // kills the window
+	        runner = null;
+	      }
+	    } catch (Exception e) {
+	      statusError(e);
+	    }
+	    toolbar.deactivate(PythonToolbar.RUN);
+	    toolbar.deactivate(PythonToolbar.STOP);
+
+	    // focus the PDE again after quitting presentation mode [toxi 030903]
+	    toFront();
 	}
+	
 	public void handleSave() {
-		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
+		toolbar.activate(PythonToolbar.SAVE);
+	    super.handleSave(true);
+	    toolbar.deactivate(PythonToolbar.SAVE);
 	}
+	
 	public boolean handleSaveAs() {
-		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
-		return false;
+		toolbar.activate(PythonToolbar.SAVE);
+	    boolean result = super.handleSaveAs();
+	    toolbar.deactivate(PythonToolbar.SAVE);
+	    return result;
 	}
 	@Override
 	public void handleImportLibrary(String arg0) {
-		// TODO Auto-generated method stub
+		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
 	
 	@Override

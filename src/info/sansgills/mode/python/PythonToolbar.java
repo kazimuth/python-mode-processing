@@ -10,12 +10,16 @@ import processing.app.Editor;
 import processing.app.EditorToolbar;
 import processing.mode.java.JavaEditor;
 
+/**
+ * 
+ * The row of icons at the top of the PDE.
+ * Handles images, titles, and clicking events.
+ *
+ */
 
-
+//something up the chain is serializable, damned if I know why
+@SuppressWarnings("serial")
 public class PythonToolbar extends EditorToolbar {
-	
-	//The row of icons at the top of the PDE.
-	//Handles images, titles, and clicking events.
 
 	static protected final int RUN 		= 0;
 	static protected final int STOP 	= 1;

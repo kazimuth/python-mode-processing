@@ -32,4 +32,10 @@ public class PythonRunner {
 		
 	}
 	
+	/*
+	 * Kill the code.
+	 */
+	public void close(){
+		
+	}
 }
