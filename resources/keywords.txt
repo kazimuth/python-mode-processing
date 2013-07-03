@@ -177,42 +177,23 @@ WAIT	LITERAL2	cursor_
 WHITESPACE	LITERAL2		
 
 
-# Java keywords (void, import, , etc.)
-		
-abstract	KEYWORD1
+# Java [python] keywords (void, import, , etc.)
+	
+and	KEYWORD1	
+as	KEYWORD1
 assert	KEYWORD1
-break	KEYWORD1	break
-case	KEYWORD1	case
-class	KEYWORD1	class
-continue	KEYWORD1	continue
-default	KEYWORD1	default	
-enum	KEYWORD1	
-extends	KEYWORD1	extends
-false	KEYWORD1	false
-final	KEYWORD1	final
-finally	KEYWORD1
-implements	KEYWORD1	implements
-import	KEYWORD1	import
-instanceof	KEYWORD1
-interface	KEYWORD1	
-native	KEYWORD1
-new	KEYWORD1	new
-null	KEYWORD1	null
-package	KEYWORD1	
-private	KEYWORD1	private
-protected	KEYWORD1	
-public	KEYWORD1	public
-return	KEYWORD1	return	
-static	KEYWORD1	static
-strictfp	KEYWORD1
-super	KEYWORD1	super
-this	KEYWORD1	this
-throw	KEYWORD1	
-throws	KEYWORD1	
-transient	KEYWORD1
-true	KEYWORD1	true
-void	KEYWORD1	void
-volatile	KEYWORD1
+class	KEYWORD1
+def	KEYWORD1
+del	KEYWORD1
+exec	KEYWORD1
+from	KEYWORD1
+global	KEYWORD1
+import	KEYWORD1
+in	KEYWORD1
+is	KEYWORD1
+not	KEYWORD1
+or	KEYWORD1
+print	KEYWORD1
 
 
 # Datatypes
@@ -243,28 +224,23 @@ long	KEYWORD5	long
 short	KEYWORD5
 
 
-# Flow structures
+# Flow structure
 
-catch	KEYWORD3	catch
-do	KEYWORD3
+break	KEYWORD3
+continue	KEYWORD3
+elif	KEYWORD3
+else	KEYWORD3	else
+except	KEYWORD3
+finally	KEYWORD3
 for	KEYWORD3	for
 if	KEYWORD3	if
-else	KEYWORD3	else
-switch	KEYWORD3	switch
-synchronized	KEYWORD3
-while	KEYWORD3	while
+lambda	KEYWORD3
+pass	KEYWORD3
+raise	KEYWORD3
+return	KEYWORD3
 try	KEYWORD3	try
-
-catch	FUNCTION3	catch
-do	FUNCTION3
-for	FUNCTION3	for
-if	FUNCTION3	if
-#else	FUNCTION3	else
-switch	FUNCTION3	switch
-synchronized	FUNCTION3
-while	FUNCTION3	while
-#try	FUNCTION3	try
-
+while	KEYWORD3	while
+yield	KEYWORD3
 
 # These items are a part of Processing but, but pages don't generate
 

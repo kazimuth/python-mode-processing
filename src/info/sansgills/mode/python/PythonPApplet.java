@@ -9,6 +9,9 @@ import processing.core.PApplet;
  *
  */
 
+// TODO fix keyPressed & other constants, not working right now (if keyPressed:
+// is always true and if keyPressed == True: is always false)
+// TODO this looks like naming conflict problems? print keyPressed returns a method...
 public class PythonPApplet extends PApplet {
 
 }

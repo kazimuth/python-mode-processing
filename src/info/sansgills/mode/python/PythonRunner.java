@@ -66,13 +66,13 @@ public class PythonRunner {
 		String className = build.getClassName();
 		try {
 			PyType pythonClass = (PyType) interp.get(className);	//get the user-made class
-			PyObject pythonApplet = pythonClass.__call__();					//make an object out of it
+			PyObject pythonApplet = pythonClass.__call__();			//make an object out of it
 			
 			//aaaand convert to an applet through jython magic
 			constructedApplet = (PythonPApplet) pythonApplet.__tojava__(PythonPApplet.class);
 			
 			//placeholder for properly running the sketch; this'll do for now
-			PythonPApplet.runSketch(new String[]{className}, constructedApplet);
+			PythonPApplet.runSketch(new String[]{className}, constructedApplet);	//TODO implement properly
 		} catch (Exception e){
 			System.err.println("Could not extract class "+className+": "+e.getMessage());
 		}
