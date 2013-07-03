@@ -21,9 +21,16 @@ public class PythonBuild {
 	}
 	
 	/*
-	 * preprocess the sketch- turn the .pde files into valid python.
+	 * Preprocess the sketch- turn the .pde files into valid python.
 	 */
 	public void build() throws Exception{ //TODO make specific exception class? whatever.
 		
+	}
+	
+	/*
+	 * The output code string
+	 */
+	public String getResults(){
+		return "print \"hello\"";	//TODO implement
 	}
 }

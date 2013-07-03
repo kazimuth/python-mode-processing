@@ -3,24 +3,17 @@ package info.sansgills.mode.python;
 import java.io.File;
 import processing.app.*;
 import processing.mode.java.JavaMode;
+import processing.mode.java.runner.Runner;
 
 /**
+ * 
  * Python Mode. Yeah.
  *
  */
 public class PythonMode extends Mode {
-    public PythonMode(Base base, File folder) {
+   
+	public PythonMode(Base base, File folder) {
         super(base, folder);
-    }
-
-    /**
-     * Return the pretty/printable/menu name for this mode. This is separate
-     * from the single word name of the folder that contains this mode. It could
-     * even have spaces, though that might result in sheer madness or total
-     * mayhem.
-     */
-    public String getTitle() {
-        return "Python";
     }
 
     /**
@@ -30,7 +23,16 @@ public class PythonMode extends Mode {
 		return new PythonEditor(base, path, state, this);
     }
     
-
+    /**
+     * Return the pretty/printable/menu name for this mode. This is separate
+     * from the single word name of the folder that contains this mode. It could
+     * even have spaces, though that might result in sheer madness or total
+     * mayhem.
+     */
+    public String getTitle() {
+        return "Python";
+    }
+    
     /**
      * Returns the default extension for this editor setup.
      * NOTE: no '.' at the beginning, that causes problems!
@@ -39,7 +41,6 @@ public class PythonMode extends Mode {
         return "pde";
     }
     
-
     /**
      * Returns a String[] array of proper extensions.
      */

@@ -13,6 +13,7 @@ import processing.app.EditorToolbar;
 import processing.app.Formatter;
 import processing.app.Mode;
 import processing.app.Toolkit;
+import processing.mode.java.JavaEditor;
 import processing.mode.java.JavaToolbar;
 
 /**
@@ -129,12 +130,39 @@ public class PythonEditor extends Editor {
 		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
 	}
 	
+	//Note that I'm doing the build here instead of in PythonMode, because of simplicity
 	public void handleRun() {
-		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
+		final PythonEditor self = this; //there must be a more elegant way to do this.
+		new Thread(new Runnable(){
+			public void run(){
+				toolbar.activate(PythonToolbar.RUN);			//pretty lights
+				PythonBuild build = new PythonBuild(sketch);	//create build
+				try {
+					build.build();								//run build
+				} catch (Exception e){
+					statusError(e);								//do something pretty?
+				}
+				runner = new PythonRunner(build, self);			//create runtime
+				runner.launch(false);							//launch runtime; present = false
+			}
+		}).start();
 	}
-	
+
 	public void handlePresent() {
-		Base.showMessage("Sorry", "You can't do that yet."); //TODO implement
+		final PythonEditor self = this;
+		new Thread(new Runnable() {
+			public void run() {
+				toolbar.activate(PythonToolbar.RUN);
+				PythonBuild build = new PythonBuild(sketch);
+				try {
+					build.build();
+				} catch (Exception e){
+					statusError(e);
+				}
+				runner = new PythonRunner(build, self);
+				runner.launch(true);							//present = true
+			}
+		}).start();
 	}
 	
 	public void handleStop() { //copied wholesale from Java Mode
