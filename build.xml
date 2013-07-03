@@ -18,6 +18,7 @@
     <property name="build" 		value="build" />
     <property name="bin" 		value="bin" />
     <property name="dist" 		value="dist" />
+	<property name="releasedir"	value="release"/>
 
     <path id="library-classpath">
         <fileset dir="${processing.base}/core/library/" > <!-- processing core -->
@@ -95,6 +96,14 @@
         <copy todir="${processing.sketchfolder}/modes/">
             <fileset dir="${dist}" />
         </copy>
+    </target>
+	
+	<!-- - - - - - - - - - - - - - - - - - - - - - -
+        RELEASE
+    - - - - - - - - - - - - - - - - - - - - - - - -->
+    <target name="release" depends="package" >
+		<mkdir dir="${releasedir}" />
+        <zip destfile="${releasedir}/${lib.name}.zip" basedir="${dist}/${lib.name}" />
     </target>
 
     <!-- - - - - - - - - - - - - - - - - - - - - - -

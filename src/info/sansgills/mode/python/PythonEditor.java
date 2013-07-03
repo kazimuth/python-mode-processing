@@ -26,7 +26,7 @@ import processing.mode.java.JavaToolbar;
 public class PythonEditor extends Editor {
 	
 	PythonMode pyMode;
-	PythonKeyListener listener; //handles syntax highlighting via black magic
+	PythonKeyListener listener; //handles syntax highlighting / indents via black magic
 	
 	private PythonRunner runner;
 	
@@ -142,7 +142,8 @@ public class PythonEditor extends Editor {
 				} catch (Exception e){
 					statusError(e);								//do something pretty?
 				}
-				runner = new PythonRunner(build, self);			//create runtime
+				prepareRun();
+				runner = new PythonRunner(build, self);			//create runtime (can't use 'this', this is a runnable)
 				runner.launch(false);							//launch runtime; present = false
 			}
 		}).start();
@@ -159,6 +160,7 @@ public class PythonEditor extends Editor {
 				} catch (Exception e){
 					statusError(e);
 				}
+				prepareRun();
 				runner = new PythonRunner(build, self);
 				runner.launch(true);							//present = true
 			}
