@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
-<project name="ProcessingPythonMode" default="install" basedir="./">
+<project name="ProcessingPythonMode" default="release" basedir="./">
 	<!-- Based on mode template http://github.com/martinleopold/TemplateMode -->
+	<!-- Note: now compiles two separate jars- one for python mode, and one that's a wrapper for the processing core that can run python files -->
 	
 	<!-- You'll want to change these to compile. -->
 	<property name="processing.base" 			location="C:\Dev\processing-2.0.1-windows64\processing-2.0.1" /> 	<!-- The directory that you unpacked Processing into. -->
@@ -10,33 +11,36 @@
 	<!-- Leave these be. -->
 	<description>Python Mode for Processing 2.0.</description>
 	
-    <property name="lib.name" 	value="PythonMode" />
-    <property name="release" 	value="0.1" />
-    <property name="java.target.version" value="1.6" />
+	<property name="lib.name" 	value="PythonMode" />
+	<property name="wrap.name"	value="ProcessingJythonWrapper" />
+	<property name="release" 	value="0.1" />
+	<property name="java.target.version" value="1.6" />
 	
-    <property name="src" 		value="src" />
-    <property name="build" 		value="build" />
-    <property name="bin" 		value="bin" />
-    <property name="dist" 		value="dist" />
-	<property name="releasedir"	value="release"/>
+	<property name="src" 		value="src" />
+	<property name="build" 		value="build" />
+	<property name="bin" 		value="bin" />
+	<property name="dist" 		value="dist" />
+	
+	<property name="lib.path"	value="info/sansgills/mode/python" />
+	<property name="wrap.path"	value="info/sansgills/mode/python/wrapper" />
 
-    <path id="library-classpath">
-        <fileset dir="${processing.base}/core/library/" > <!-- processing core -->
-            <include name="*.jar" />
-        </fileset>
-        
-        <fileset dir="${processing.base}/lib/" > <!-- pde and ant -->
-            <include name="*.jar" />
-        </fileset>
+	<path id="library-classpath">
+		<fileset dir="${processing.base}/core/library/" > <!-- processing core -->
+			<include name="*.jar" />
+		</fileset>
+		
+		<fileset dir="${processing.base}/lib/" > <!-- pde and ant -->
+			<include name="*.jar" />
+		</fileset>
 
-        <fileset dir="lib" >
-            <include name="*.jar" /> <!-- jython -->
-        </fileset>
-    </path>
+		<fileset dir="lib" >
+			<include name="*.jar" /> <!-- jython -->
+		</fileset>
+	</path>
 	
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
-        GET
-    - - - - - - - - - - - - - - - - - - - - - - - -->
+		GET
+	- - - - - - - - - - - - - - - - - - - - - - - -->
 	<target name="get">
 		<mkdir dir="lib" />
 		<get 
@@ -46,72 +50,75 @@
 			verbose="true" /> <!-- download latest jython (note: update this if jython updates) -->
 	</target>
 	
-    <!-- - - - - - - - - - - - - - - - - - - - - - -
-        BUILD
-    - - - - - - - - - - - - - - - - - - - - - - - -->
-    <target name="build" depends="get">
-        <propertyfile file="build.number" /> <!-- create the build.number file if it doesn't exist -->
-        <buildnumber file="build.number" />
+	<!-- - - - - - - - - - - - - - - - - - - - - - -
+		BUILD
+	- - - - - - - - - - - - - - - - - - - - - - - -->
+	<target name="build" depends="get">
+		<propertyfile file="build.number" /> <!-- create the build.number file if it doesn't exist -->
+		<buildnumber file="build.number" />
 				
-        <mkdir dir="${build}" />
+		<mkdir dir="${build}" />
+		
+		<javac srcdir="${src}" destdir="${build}" source="${java.target.version}" target="${java.target.version}" bootclasspath="${java.target.bootclasspath}" includeantruntime="false">
+			<classpath>
+				<path refid="library-classpath"/>
+			</classpath>
+		</javac>
+	</target>
 
-        <javac srcdir="${src}" destdir="${build}" source="${java.target.version}" target="${java.target.version}" bootclasspath="${java.target.bootclasspath}" includeantruntime="false">
-            <classpath>
-                <path refid="library-classpath"/>
-            </classpath>
-        </javac>
-    </target>
+	<!-- - - - - - - - - - - - - - - - - - - - - - -
+		PACKAGE
+	- - - - - - - - - - - - - - - - - - - - - - - -->
+	<target name="package" depends="build">
+		<delete dir="${dist}" />
+		<property name="bundle" value="${dist}/${lib.name}"/>
+		<mkdir dir="${bundle}" />
+		<mkdir dir="${bundle}/mode" />
+		
+		<!-- make mode jar -->
+		<jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build" includes="${lib.path}/*.class"/>
+		<!-- make wrapper jar -->
+		<jar jarfile="${bundle}/mode/${wrap.name}.jar" basedir="build" includes="${wrap.path}/*.class"/>
+		
+		
+		<copy todir="${bundle}">
+			<fileset dir="resources/" />
+		</copy>
 
-    <!-- - - - - - - - - - - - - - - - - - - - - - -
-        PACKAGE
-    - - - - - - - - - - - - - - - - - - - - - - - -->
-    <target name="package" depends="build">
-        <delete dir="${dist}" />
-        <property name="bundle" value="${dist}/${lib.name}"/>
-        <mkdir dir="${bundle}" />
-        <mkdir dir="${bundle}/mode" />
-
-        <jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build"/>
-
-        <copy todir="${bundle}">
-            <fileset dir="resources/" />
-        </copy>
-
-        <copy todir="${bundle}/mode">
-            <fileset dir="lib/" />
-        </copy>
+		<copy todir="${bundle}/mode">
+			<fileset dir="lib/" />
+		</copy>
 	
-        <replaceregexp file="${bundle}/mode.properties" flags="g"
-                               match="@@version@@" replace="${build.number}" />
-        <replaceregexp file="${bundle}/mode.properties" flags="g"
-                               match="@@pretty-version@@" replace="${release}" />
-    </target>
+		<replaceregexp file="${bundle}/mode.properties" flags="g"
+							   match="@@version@@" replace="${build.number}" />
+		<replaceregexp file="${bundle}/mode.properties" flags="g"
+							   match="@@pretty-version@@" replace="${release}" />
+	</target>
 
-    <!-- - - - - - - - - - - - - - - - - - - - - - -
-        INSTALL
-    - - - - - - - - - - - - - - - - - - - - - - - -->
-    <target name="install" depends="package" >
-        <delete dir="${processing.sketchfolder}/modes/${lib.name}" />
+	<!-- - - - - - - - - - - - - - - - - - - - - - -
+		INSTALL
+	- - - - - - - - - - - - - - - - - - - - - - - -->
+	<target name="install" depends="package" >
+		<delete dir="${processing.sketchfolder}/modes/${lib.name}" />
 
-        <copy todir="${processing.sketchfolder}/modes/">
-            <fileset dir="${dist}" />
-        </copy>
-    </target>
+		<copy todir="${processing.sketchfolder}/modes/">
+			<fileset dir="${dist}" />
+		</copy>
+	</target>
 	
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
-        RELEASE
-    - - - - - - - - - - - - - - - - - - - - - - - -->
-    <target name="release" depends="package" >
-		<mkdir dir="${releasedir}" />
-        <zip destfile="${releasedir}/${lib.name}.zip" basedir="${dist}/${lib.name}" />
-    </target>
+		RELEASE
+	- - - - - - - - - - - - - - - - - - - - - - - -->
+	<target name="release" depends="package" >
+		<zip destfile="${dist}/${lib.name}.zip" basedir="${dist}/${lib.name}" />
+	</target>
 
-    <!-- - - - - - - - - - - - - - - - - - - - - - -
-        CLEAN
-    - - - - - - - - - - - - - - - - - - - - - - - -->
-    <target name="clean" >
-        <delete dir="${build}" />
-        <delete dir="${dist}" />
-    </target>
+	<!-- - - - - - - - - - - - - - - - - - - - - - -
+		CLEAN
+	- - - - - - - - - - - - - - - - - - - - - - - -->
+	<target name="clean" >
+		<delete dir="${build}" />
+		<delete dir="${dist}" />
+	</target>
 	
 </project>
