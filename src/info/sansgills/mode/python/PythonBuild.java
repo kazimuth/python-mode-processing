@@ -1,9 +1,10 @@
 package info.sansgills.mode.python;
 
+import java.io.File;
+import java.io.PrintWriter;
+
 import processing.app.Sketch;
 import processing.app.SketchCode;
-import org.python.util.*;
-import org.python.core.*;
 
 
 /**
@@ -17,8 +18,11 @@ public class PythonBuild {
 	Sketch sketch;
 	String resultProgram;	//old-school
 	
+	File binFolder;
+	File outFile;
+	
 	//build tracking
-	public int buildnumber;
+	private int buildnumber;
 	private static int buildstotal = 0;
 	
 	
@@ -37,22 +41,54 @@ public class PythonBuild {
 		resultProgram = "";
 		
 		SketchCode[] parts = sketch.getCode();		//TODO this function doesn't work properly, it returns old code for some reason
+		
 		//concatenate code strings
 		for(int i = parts.length-1; i >= 0; i--){	//iterate backwards... it seemed like a good idea at the time
 			resultProgram += "\n";
 			resultProgram += parts[i].getProgram();
 		}
 		
-		//System.out.println("output code: "+resultProgram);
+		preprocess();
 		
-		//more things?
+		
+		//write output file
+		binFolder = sketch.makeTempFolder();
+		
+		outFile = new File(binFolder.getAbsolutePath()
+				+ sketch.getName().toLowerCase()
+				+ ".py");
+		outFile.createNewFile();
+		PrintWriter writer = new PrintWriter(outFile);
+		writer.write(resultProgram+"\n");
+		writer.close();
+	}
+	
+	/*
+	 * Turn .pde into valid python
+	 */
+	private void preprocess(){
+		//TODO implement
 	}
 	
 	/*
 	 * The output code string
 	 */
-	public String getResults(){
+	public String getResultString(){
 		return resultProgram;
+	}
+	
+	/*
+	 * The output file path
+	 */
+	public String getResultFile(){
+		return outFile.getAbsolutePath();
+	}
+	
+	/*
+	 * 
+	 */
+	public int getBuildNumber(){
+		return buildnumber;
 	}
 	
 	/*
@@ -60,5 +96,12 @@ public class PythonBuild {
 	 */
 	public String getClassName(){
 		return "Placeholder";		//TODO implement naming scheme
+	}
+	
+	/*
+	 * The name of the output object
+	 */
+	public String getObjName(){
+		return "applet";			// TODO
 	}
 }

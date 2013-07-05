@@ -20,6 +20,7 @@
 	<property name="build" 		value="build" />
 	<property name="bin" 		value="bin" />
 	<property name="dist" 		value="dist" />
+	<property name="releasedir"	value="release" />
 	
 	<property name="lib.path"	value="info/sansgills/mode/python" />
 	<property name="wrap.path"	value="info/sansgills/mode/python/wrapper" />
@@ -110,7 +111,7 @@
 		RELEASE
 	- - - - - - - - - - - - - - - - - - - - - - - -->
 	<target name="release" depends="package" >
-		<zip destfile="${dist}/${lib.name}.zip" basedir="${dist}/${lib.name}" />
+		<zip destfile="${releasedir}/${lib.name}.zip" basedir="${dist}/${lib.name}" />
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - - - - - -

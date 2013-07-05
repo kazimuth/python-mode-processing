@@ -15,6 +15,16 @@ import org.python.util.InteractiveConsole;
  * 
  * TODO REPL?
  *
+ * Architecture note: Processing.py has a 'PApplet Jython Driver' class that
+ * contains a private Python interpreter. It injects the PApplet variables and
+ * methods into this interpreter, updating whenever it needs to. It runs the
+ * input python directly, without modification.
+ * 
+ * I'm using a different approach, similar to vanilla Processing: preprocess the
+ * .pde input into a valid python class inheriting from PApplet, run the
+ * resulting code through an interpreter, and extract the class to create a
+ * final Java object to run as a PApplet.
+ *
  */
 
 public class ProcessingJythonWrapper {
@@ -36,7 +46,7 @@ public class ProcessingJythonWrapper {
 	 * 
 	 */
 	public static void main(String[] args) {
-		scriptPath = args[1];
+		scriptPath = args[0];
 		params = Arrays.copyOfRange(args, 1, args.length);
 		run();
 	}
