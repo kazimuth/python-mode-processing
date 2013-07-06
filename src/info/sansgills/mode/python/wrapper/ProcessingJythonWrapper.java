@@ -1,5 +1,6 @@
 package info.sansgills.mode.python.wrapper;
 
+import java.io.File;
 import java.util.Arrays;
 
 import org.python.core.Py;
@@ -51,13 +52,15 @@ public class ProcessingJythonWrapper {
 		run();
 	}
 
-	
+	/*
+	 * Run.
+	 */
 	public static void run(){
 		interp = new InteractiveConsole();	// create jython environment
 		sys = Py.getSystemState();			// python 'sys' variable
 		
 		//path to the archive of this wrapper, for Jython to import PythonPApplet from
-		String jarPath = ""; //TODO
+		String jarPath = getJarLocation(); //TODO
 		
 		sys.path.append(new PyString(jarPath));
 		
@@ -76,7 +79,23 @@ public class ProcessingJythonWrapper {
 			PythonPApplet.runSketch(params, constructedApplet);
 			
 		} catch (Exception e){
+			System.err.println("Error running sketch: "+e.getMessage()); //TODO
+			System.exit(1);
 		}
 	}
 	
+	/*
+	 * An odd bit of introspection to get the location of this .jar file
+	 * May not work...
+	 */
+	private static String getJarLocation(){
+		try{
+			File jar = new File(ProcessingJythonWrapper.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			return jar.getAbsolutePath();
+		}catch(Exception e){
+			System.err.println("Error getting .jar location: "+e.getMessage());
+			System.exit(1);
+		}
+		return null;
+	}
 }

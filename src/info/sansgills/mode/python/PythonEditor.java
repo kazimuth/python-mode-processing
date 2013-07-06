@@ -136,7 +136,7 @@ public class PythonEditor extends Editor {
 		new Thread(new Runnable(){
 			public void run(){
 				toolbar.activate(PythonToolbar.RUN);			//pretty lights
-				PythonBuild build = new PythonBuild(sketch);	//create build
+				PythonBuild build = new PythonBuild(sketch, pyMode);	//create build
 				try {
 					build.build();								//run build
 				} catch (Exception e){
@@ -154,7 +154,7 @@ public class PythonEditor extends Editor {
 		new Thread(new Runnable() {
 			public void run() {
 				toolbar.activate(PythonToolbar.RUN);
-				PythonBuild build = new PythonBuild(sketch);
+				PythonBuild build = new PythonBuild(sketch, pyMode);
 				try {
 					build.build();
 				} catch (Exception e){

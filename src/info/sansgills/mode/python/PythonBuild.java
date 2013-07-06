@@ -3,6 +3,7 @@ package info.sansgills.mode.python;
 import java.io.File;
 import java.io.PrintWriter;
 
+import processing.app.Base;
 import processing.app.Sketch;
 import processing.app.SketchCode;
 
@@ -18,6 +19,8 @@ public class PythonBuild {
 	Sketch sketch;
 	String resultProgram;	//old-school
 	
+	PythonMode mode;
+	
 	File binFolder;
 	File outFile;
 	
@@ -26,8 +29,9 @@ public class PythonBuild {
 	private static int buildstotal = 0;
 	
 	
-	public PythonBuild(Sketch sketch){
+	public PythonBuild(Sketch sketch, PythonMode mode){
 		this.sketch = sketch;
+		this.mode = mode;
 		
 		buildnumber = buildstotal;
 		buildstotal++;
@@ -89,6 +93,26 @@ public class PythonBuild {
 	 */
 	public int getBuildNumber(){
 		return buildnumber;
+	}
+	
+	/*
+	 * Classes used to run the build.
+	 */
+	public String getClassPath(){
+		String cp = "";
+		String sep = System.getProperty("file.separator");
+		String modeRoot = Base.getSketchbookModesFolder().getAbsolutePath()
+				+sep
+				+"PythonMode"
+				+sep
+				+"mode"
+				+sep;
+		cp += modeRoot+"ProcessingJythonWrapper.jar;";
+		cp += modeRoot+"jython-standalone-2.7-b1.jar;";
+		
+		cp += mode.getCoreLibrary().getClassPath();
+		
+		return cp; //TODO libraries?
 	}
 	
 	/*
