@@ -24,7 +24,7 @@ Future work:
 As I don't have the preprocessor done, code isn't very pretty right now, but it works!
 A working sketch (copy and paste into the PDE to try it out!):
 
-	import info.sansgills.mode.python.PythonPApplet as PApplet
+	import info.sansgills.mode.python.wrapper.PythonPApplet as PApplet
 	
 	class Placeholder(PApplet):
 		def setup(self):
@@ -32,6 +32,8 @@ A working sketch (copy and paste into the PDE to try it out!):
 			self.background(0)
 			self.noStroke()
 			self.ellipseMode(PApplet.CENTER)
-		
+	
 		def draw(self):
 			self.ellipse(self.mouseX, self.mouseY, 5, 5)
+	
+	applet = Placeholder()

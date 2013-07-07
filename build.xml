@@ -60,7 +60,7 @@
 				
 		<mkdir dir="${build}" />
 		
-		<javac srcdir="${src}" destdir="${build}" source="${java.target.version}" target="${java.target.version}" bootclasspath="${java.target.bootclasspath}" includeantruntime="false">
+		<javac srcdir="${src}" destdir="${build}" source="${java.target.version}" target="${java.target.version}" bootclasspath="${java.target.bootclasspath}" includeantruntime="false" debug="true">
 			<classpath>
 				<path refid="library-classpath"/>
 			</classpath>

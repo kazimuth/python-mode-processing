@@ -136,13 +136,13 @@ public class PythonEditor extends Editor {
 		new Thread(new Runnable(){
 			public void run(){
 				toolbar.activate(PythonToolbar.RUN);			//pretty lights
+				prepareRun();
 				PythonBuild build = new PythonBuild(sketch, pyMode);	//create build
 				try {
 					build.build();								//run build
 				} catch (Exception e){
 					statusError(e);								//do something pretty?
 				}
-				prepareRun();
 				runner = new PythonRunner(build, self);			//create runtime (can't use 'this', this is a runnable)
 				runner.launch(false);							//launch runtime; present = false
 			}
@@ -154,13 +154,13 @@ public class PythonEditor extends Editor {
 		new Thread(new Runnable() {
 			public void run() {
 				toolbar.activate(PythonToolbar.RUN);
+				prepareRun();
 				PythonBuild build = new PythonBuild(sketch, pyMode);
 				try {
 					build.build();
 				} catch (Exception e){
 					statusError(e);
 				}
-				prepareRun();
 				runner = new PythonRunner(build, self);
 				runner.launch(true);							//present = true
 			}

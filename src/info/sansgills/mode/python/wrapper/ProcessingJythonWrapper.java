@@ -36,10 +36,7 @@ public class ProcessingJythonWrapper {
 	static PySystemState sys;				// for modifying python classpath, as yet
 	static PythonPApplet constructedApplet;	// Applet we pull from the interpreter
 	
-	static String scriptPath;
-	static String objname = "applet";
-	
-	static String[] params;
+	static final String objname = "applet";
 	
 	/**
 	 * 
@@ -47,23 +44,22 @@ public class ProcessingJythonWrapper {
 	 * 
 	 */
 	public static void main(String[] args) {
-		scriptPath = args[0];
-		params = Arrays.copyOfRange(args, 1, args.length);
-		run();
+		String scriptPath = args[0];
+		String[] params = Arrays.copyOfRange(args, 1, args.length);
+		run(scriptPath, params);
 	}
 
 	/*
 	 * Run.
 	 */
-	public static void run(){
+	public static void run(String scriptPath, String[] params){
 		interp = new InteractiveConsole();	// create jython environment
 		sys = Py.getSystemState();			// python 'sys' variable
 		
 		//path to the archive of this wrapper, for Jython to import PythonPApplet from
-		String jarPath = getJarLocation(); //TODO
-		
+		String jarPath = getJarLocation();
+				
 		sys.path.append(new PyString(jarPath));
-		
 		
 		try {
 			//run the script we were given; should define a PythonPApplet subclass and create an instance
@@ -72,14 +68,19 @@ public class ProcessingJythonWrapper {
 			//get the applet we constructed
 			PyObject pythonApplet = interp.get(objname);
 			
-			//aaaand convert to an applet through jython magic
-			constructedApplet = (PythonPApplet) pythonApplet.__tojava__(PythonPApplet.class);
+			if (pythonApplet != null) {
+				// aaaand convert to an applet through jython magic
+				constructedApplet = (PythonPApplet) pythonApplet.__tojava__(PythonPApplet.class);
+			} else {
+				throw new Exception("Couldn't construct applet.");
+			}
 			
 			//run the sketch!
 			PythonPApplet.runSketch(params, constructedApplet);
 			
 		} catch (Exception e){
-			System.err.println("Error running sketch: "+e.getMessage()); //TODO
+			System.err.println("Error running sketch: " + e.getMessage()); //TODO
+			e.printStackTrace();
 			System.exit(1);
 		}
 	}

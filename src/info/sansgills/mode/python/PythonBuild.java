@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.PrintWriter;
 
 import processing.app.Base;
+import processing.app.Library;
 import processing.app.Sketch;
 import processing.app.SketchCode;
 
@@ -44,7 +45,7 @@ public class PythonBuild {
 		//a start
 		resultProgram = "";
 		
-		SketchCode[] parts = sketch.getCode();		//TODO this function doesn't work properly, it returns old code for some reason
+		SketchCode[] parts = sketch.getCode(); //fix'd
 		
 		//concatenate code strings
 		for(int i = parts.length-1; i >= 0; i--){	//iterate backwards... it seemed like a good idea at the time
@@ -59,11 +60,14 @@ public class PythonBuild {
 		binFolder = sketch.makeTempFolder();
 		
 		outFile = new File(binFolder.getAbsolutePath()
+				+ File.separator
 				+ sketch.getName().toLowerCase()
 				+ ".py");
 		outFile.createNewFile();
+	
+		
 		PrintWriter writer = new PrintWriter(outFile);
-		writer.write(resultProgram+"\n");
+		writer.print(resultProgram+"\n");
 		writer.close();
 	}
 	
@@ -97,22 +101,40 @@ public class PythonBuild {
 	
 	/*
 	 * Classes used to run the build.
+	 * 
+	 * TODO build during preprocess
 	 */
-	public String getClassPath(){
-		String cp = "";
-		String sep = System.getProperty("file.separator");
-		String modeRoot = Base.getSketchbookModesFolder().getAbsolutePath()
-				+sep
-				+"PythonMode"
-				+sep
-				+"mode"
-				+sep;
-		cp += modeRoot+"ProcessingJythonWrapper.jar;";
-		cp += modeRoot+"jython-standalone-2.7-b1.jar;";
+	public String getClassPath() {
+		//the Processing classpath
+		String cp = mode.getCoreLibrary().getClassPath();
 		
-		cp += mode.getCoreLibrary().getClassPath();
+		// From JavaMode.java:
+		// Finally, add the regular Java CLASSPATH. This contains everything
+		// imported by the PDE itself (core.jar, pde.jar, quaqua.jar) which may
+		// in fact be more of a problem.
+		String javaClassPath = System.getProperty("java.class.path");
+		// Remove quotes if any.. A messy (and frequent) Windows problem
+		if (javaClassPath.startsWith("\"") && javaClassPath.endsWith("\"")) {
+			javaClassPath = javaClassPath.substring(1,
+					javaClassPath.length() - 1);
+		}
+		cp += File.pathSeparator + javaClassPath;
 		
-		return cp; //TODO libraries?
+		//The .jars for this mode; Jython and wrapper, primarily
+		String jythonModeLib = Base.getSketchbookModesFolder().getAbsolutePath()
+				+ File.separator
+				+ "PythonMode"
+				+ File.separator
+				+ "mode";
+		System.out.println(jythonModeLib);
+		cp += Base.contentsToClassPath(new File(jythonModeLib));
+		
+		
+		return cp; // TODO libraries?
+	}
+
+	public String getJavaLibraryPath(){
+		return "";
 	}
 	
 	/*
