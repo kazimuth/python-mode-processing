@@ -42,7 +42,7 @@ public class PythonBuild {
 	 * Preprocess the sketch- turn the .pde files into valid python.
 	 */
 	public void build() throws Exception{
-		//a start
+		
 		resultProgram = "";
 		
 		SketchCode[] parts = sketch.getCode(); //fix'd
@@ -75,6 +75,16 @@ public class PythonBuild {
 	 * Turn .pde into valid python
 	 */
 	private void preprocess(){
+
+		// Load a small python file that handles imports & some python-specific
+		// stuff (overriding some PVector methods, for example)
+		try{
+			String core = Base.loadFile(new File(mode.getModeFolder()+"core.py"));
+			resultProgram = core + "\n" + resultProgram;
+		}catch(Exception e){
+			System.out.println("Preprocessing failed.");
+		}
+		
 		//TODO implement
 	}
 	

@@ -33,6 +33,16 @@ public class PythonMode extends Mode {
         return "Python";
     }
     
+    /*
+     * Utility
+     */
+    public String getModeFolder(){
+    	return Base.getSketchbookModesFolder()
+    			+ File.separator
+    			+ "PythonMode"
+    			+ File.separator;
+    }
+    
     /**
      * Returns the default extension for this editor setup.
      * NOTE: no '.' at the beginning, that causes problems!
