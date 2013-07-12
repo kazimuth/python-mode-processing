@@ -35,7 +35,7 @@
 		</fileset>
 
 		<fileset dir="lib" >
-			<include name="*.jar" /> <!-- jython -->
+			<include name="*.jar" /> <!-- jython, antlr -->
 		</fileset>
 	</path>
 	
@@ -49,6 +49,11 @@
 			dest="lib/jython-standalone-2.7-b1.jar" 
 			skipexisting="true"
 			verbose="true" /> <!-- download latest jython (note: update this if jython updates) -->
+		<get
+			src="http://www.antlr.org/download/antlr-runtime-4.1.jar"
+			dest="lib/antlr-runtime-4.1.jar"
+			skipexisting="true"
+			verbose="true" /> <!-- download latest ANTLR (v4 includes a runtime library, but it's tiny, so whatevs) -->
 	</target>
 	
 	<!-- - - - - - - - - - - - - - - - - - - - - - -

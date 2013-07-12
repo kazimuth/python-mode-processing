@@ -179,7 +179,7 @@ public class PythonRunner {
 	/*
 	 * Create redirect threads for stdout, stderr, etc.
 	 * 
-	 * TODO connect vm & error threads
+	 * TODO handle special err. messages
 	 */
 	private void attach(){
 		// piggybacking off of Java Mode's redirect for now
