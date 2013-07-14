@@ -13,12 +13,15 @@ To install: unzip PythonMode.zip into "{your sketchfolder}/modes/PythonMode" and
 
 Check build.xml for building instructions.
 
-Currently working on:
+Done:
 - Basic functionality- running python code
+- Basic indentation & highlighting
+
+Currently working on:
+- Preprocessor
 
 Future work:
-- Preprocessor
-- Autoindent & syntax highlighting
+- Better autoindent & syntax highlighting
 - REPL for live coding
 
 As I don't have the preprocessor done, code isn't very pretty right now, but it works!
