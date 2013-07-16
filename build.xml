@@ -111,7 +111,7 @@
 			<fileset dir="${dist}" />
 		</copy>
 	</target>
-	
+
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
 		RELEASE
 	- - - - - - - - - - - - - - - - - - - - - - - -->
@@ -125,6 +125,10 @@
 	<target name="clean" >
 		<delete dir="${build}" />
 		<delete dir="${dist}" />
+		<delete>
+			<fileset dir="${src}/info/sansgills/mode/python/preproc"
+						includes="*.java *.tokens" />; <!-- remove generated files -->
+		</delete>
 	</target>
 	
 </project>
