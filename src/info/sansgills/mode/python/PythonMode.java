@@ -36,7 +36,7 @@ public class PythonMode extends Mode {
     /*
      * Utility
      */
-    public String getModeFolder(){
+    public static String getModeFolder(){
     	return Base.getSketchbookModesFolder()
     			+ File.separator
     			+ "PythonMode"

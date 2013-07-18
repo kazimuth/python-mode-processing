@@ -36,7 +36,7 @@ public class ProcessingJythonWrapper {
 	static PySystemState sys;				// for modifying python classpath, as yet
 	static PythonPApplet constructedApplet;	// Applet we pull from the interpreter
 	
-	static final String objname = "applet";
+	static final String objname = "__applet__";
 	
 	/**
 	 * 
@@ -56,10 +56,12 @@ public class ProcessingJythonWrapper {
 		interp = new InteractiveConsole();	// create jython environment
 		sys = Py.getSystemState();			// python 'sys' variable
 		
-		//path to the archive of this wrapper, for Jython to import PythonPApplet from
-		String jarPath = getJarLocation();
-				
-		sys.path.append(new PyString(jarPath));
+		
+		// give jython the packages we need
+		// TODO libraries?
+		sys.add_package("info.sansgills.mode.python.wrapper");
+		sys.add_package("processing.core");
+		sys.add_package("processing.opengl");
 		
 		try {
 			//run the script we were given; should define a PythonPApplet subclass and create an instance
@@ -83,20 +85,5 @@ public class ProcessingJythonWrapper {
 			e.printStackTrace();
 			System.exit(1);
 		}
-	}
-	
-	/*
-	 * An odd bit of introspection to get the location of this .jar file
-	 * May not work...
-	 */
-	private static String getJarLocation(){
-		try{
-			File jar = new File(ProcessingJythonWrapper.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-			return jar.getAbsolutePath();
-		}catch(Exception e){
-			System.err.println("Error getting .jar location: "+e.getMessage());
-			System.exit(1);
-		}
-		return null;
 	}
 }

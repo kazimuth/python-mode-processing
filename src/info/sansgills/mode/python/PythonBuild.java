@@ -17,8 +17,9 @@ import processing.app.SketchCode;
  */
 
 public class PythonBuild {
+	
 	Sketch sketch;
-	String resultProgram;	//old-school
+	String resultProgram;
 	
 	PythonMode mode;
 	
@@ -28,7 +29,6 @@ public class PythonBuild {
 	//build tracking
 	private int buildnumber;
 	private static int buildstotal = 0;
-	
 	
 	public PythonBuild(Sketch sketch, PythonMode mode){
 		this.sketch = sketch;
@@ -43,17 +43,17 @@ public class PythonBuild {
 	 */
 	public void build() throws Exception{
 		
-		resultProgram = "";
+		StringBuilder program = new StringBuilder();
 		
 		SketchCode[] parts = sketch.getCode(); //fix'd
 		
 		//concatenate code strings
 		for(int i = parts.length-1; i >= 0; i--){	//iterate backwards... it seemed like a good idea at the time
-			resultProgram += "\n";
-			resultProgram += parts[i].getProgram();
+			program.append("\n");
+			program.append(parts[i].getProgram());
 		}
 		
-		preprocess();
+		resultProgram = preprocess(program);
 		
 		
 		//write output file
@@ -67,26 +67,51 @@ public class PythonBuild {
 	
 		
 		PrintWriter writer = new PrintWriter(outFile);
-		writer.print(resultProgram+"\n");
+		writer.print(resultProgram);
 		writer.close();
 	}
+	
+	
+	
+	//Things we don't need to reload every build
+	//Some small files we add to the beginning & end of sketches
+	private static String prepend;
+	static {
+		try{
+			prepend = Base.loadFile(new File(PythonMode.getModeFolder()+"prepend.py"));	
+		}catch(Exception e){
+			System.err.println("Error instantiating Python Mode");
+			e.printStackTrace();
+		}
+	}
+	
+	
 	
 	/*
 	 * Turn .pde into valid python
 	 */
-	private void preprocess(){
-
-		// Load a small python file that handles imports & some python-specific
-		// stuff (overriding some PVector methods, for example)
+	private String preprocess(StringBuilder program){
 		try{
-			String core = Base.loadFile(new File(mode.getModeFolder()+"core.py"));
-			resultProgram = core + "\n" + resultProgram;
+			
+			program.insert(0, prepend);
+			program.append(append);
+			
 		}catch(Exception e){
-			System.out.println("Preprocessing failed.");
+			
+			System.err.println("Preprocessing failed.");
+			e.printStackTrace();
+			
 		}
-		
-		//TODO implement
+		return program.toString();
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	/*
 	 * The output code string
