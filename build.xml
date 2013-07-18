@@ -35,7 +35,7 @@
 		</fileset>
 
 		<fileset dir="lib" >
-			<include name="*.jar" /> <!-- jython, antlr -->
+			<include name="*.jar" /> <!-- jython -->
 		</fileset>
 	</path>
 	
@@ -49,11 +49,6 @@
 			dest="lib/jython-standalone-2.7-b1.jar" 
 			skipexisting="true"
 			verbose="true" /> <!-- download latest jython (note: update this if jython updates) -->
-		<get
-			src="http://www.antlr.org/download/antlr-runtime-4.1.jar"
-			dest="lib/antlr-runtime-4.1.jar"
-			skipexisting="true"
-			verbose="true" /> <!-- download latest ANTLR (v4 includes a runtime library, but it's tiny, so whatevs) -->
 	</target>
 	
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
@@ -125,10 +120,6 @@
 	<target name="clean" >
 		<delete dir="${build}" />
 		<delete dir="${dist}" />
-		<delete>
-			<fileset dir="${src}/info/sansgills/mode/python/preproc"
-						includes="*.java *.tokens" />; <!-- remove generated files -->
-		</delete>
 	</target>
 	
 </project>
