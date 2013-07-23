@@ -67,6 +67,7 @@
 		</javac>
 		
 		<copy file="${src}/${wrap.path}/prepend.py" tofile="${build}/${wrap.path}/prepend.py" />
+		<copy file="${src}/${wrap.path}/scrub.py" tofile="${build}/${wrap.path}/scrub.py" />
 		
 	</target>
 

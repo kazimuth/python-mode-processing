@@ -56,7 +56,7 @@ def __mul__(a, b):
         raise TypeError("The * operator can only be used to multiply a PVector by a scalar")
     return PVector(a.x * b, a.y * b, a.z * b)
 
-	
+
 __applet__ = PythonPApplet()
 g = globals()
 
@@ -64,7 +64,7 @@ for method in PythonPApplet.staticMethods:
 	g[method] = PApplet.__dict__[method]
 	
 for constant in PythonPApplet.constants:
-	g[constant] = PConstants.__dict__[constant]
+	g[constant] = PConstants.__dict__[constant]._doget(__applet__)
 
 getframeRate = __applet__.getframeRate
 getkeyPressed = __applet__.getkeyPressed

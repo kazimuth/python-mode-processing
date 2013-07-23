@@ -27,12 +27,13 @@ import org.python.util.InteractiveConsole;
 
 public class ProcessingJythonWrapper {
 	
-	//EVERYTHING IS STATIC
 	
-	//Read in prepend.py from jar (this is the only one-liner to read in a stream, don't you love java)
+	//Read in some scripts from the jar (this is the only one-liner to read in a stream, don't you love java)
 	static final String prepend;
+	static final String scrub;
 	static{
 		prepend = new Scanner(ProcessingJythonWrapper.class.getResourceAsStream("prepend.py")).useDelimiter("\\A").next();
+		scrub = new Scanner(ProcessingJythonWrapper.class.getResourceAsStream("scrub.py")).useDelimiter("\\A").next();
 	}
 	
 	static final String[] sketchFunctions = { "setup", "draw", "mousePressed",
@@ -67,6 +68,8 @@ public class ProcessingJythonWrapper {
 		PySystemState.add_package("processing.core");
 		PySystemState.add_package("processing.opengl");
 	}
+	
+	
 
 	/*
 	 * Run.
