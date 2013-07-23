@@ -27,8 +27,7 @@ public class PythonRunner {
 	Process sketchProcess;			// the process we create
 
 	// Threads to redirect output / error streams from process to us
-	Thread errThread = null;
-	Thread outThread = null;
+	Communicator communicator;
 	
 	public PythonRunner(PythonBuild build, PythonEditor editor) {
 		this.build = build;
@@ -164,10 +163,9 @@ public class PythonRunner {
 		new Thread(new Runnable(){
 			public void run(){
 				sketchProcess = PApplet.exec(args);
-				attach(); //TODO dirty hack
+				communicator = new Communicator(sketchProcess, editor);
 				try{
 					int result = sketchProcess.waitFor();
-					System.out.println("result: "+result);
 				}catch(InterruptedException e){
 					System.out.println("error:");
 					e.printStackTrace();
@@ -177,25 +175,10 @@ public class PythonRunner {
 	}
 	
 	/*
-	 * Create redirect threads for stdout, stderr, etc.
-	 * 
-	 * TODO handle special err. messages
-	 */
-	private void attach(){
-		// piggybacking off of Java Mode's redirect for now
-		outThread = new StreamRedirectThread("JVM stdout Reader",
-				sketchProcess.getInputStream(), System.out);
-		errThread = new StreamRedirectThread("JVM stderr Reader",
-				sketchProcess.getErrorStream(), System.err);
-		
-		outThread.start();
-		errThread.start();
-	}
-	
-	/*
 	 * Kill the code.
 	 */
 	public void close() {
+		communicator.close();
 		if(sketchProcess != null){
 			sketchProcess.destroy();
 			sketchProcess = null;

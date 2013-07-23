@@ -1,6 +1,5 @@
 package info.sansgills.mode.python.wrapper;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -31,7 +30,10 @@ public class ProcessingJythonWrapper {
 	//EVERYTHING IS STATIC
 	
 	//Read in prepend.py from jar (this is the only one-liner to read in a stream, don't you love java)
-	static final String prepend = new Scanner(ProcessingJythonWrapper.class.getResourceAsStream("prepend.py")).useDelimiter("\\A").next();
+	static final String prepend;
+	static{
+		prepend = new Scanner(ProcessingJythonWrapper.class.getResourceAsStream("prepend.py")).useDelimiter("\\A").next();
+	}
 	
 	static final String[] sketchFunctions = { "setup", "draw", "mousePressed",
 			"mouseReleased", "mouseClicked", "mouseWheel", "mouseMoved",
@@ -48,26 +50,28 @@ public class ProcessingJythonWrapper {
 	 * First argument is the path to the script; the rest are things to pass to PApplet.
 	 * 
 	 */
-	public static void main(String[] args) {		
+	public static void main(String[] args) {
 		String scriptPath = args[0];
 		String[] params = Arrays.copyOfRange(args, 1, args.length);
+		prepare();
 		run(scriptPath, params);
+	}
+
+	public static void prepare() {
+		interp = new InteractiveConsole(); // create jython environment
+		sys = Py.getSystemState(); // python 'sys' variable
+
+		// give jython the packages we need
+		// TODO libraries?
+		PySystemState.add_package("info.sansgills.mode.python.wrapper");
+		PySystemState.add_package("processing.core");
+		PySystemState.add_package("processing.opengl");
 	}
 
 	/*
 	 * Run.
 	 */
 	public static void run(String scriptPath, String[] params){
-		interp = new InteractiveConsole();	// create jython environment
-		sys = Py.getSystemState();			// python 'sys' variable
-		
-		
-		// give jython the packages we need
-		// TODO libraries?
-		sys.add_package("info.sansgills.mode.python.wrapper");
-		sys.add_package("processing.core");
-		sys.add_package("processing.opengl");
-		
 		try {
 			//run prepend.py
 			interp.exec(prepend);
