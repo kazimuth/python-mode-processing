@@ -3,10 +3,7 @@ package info.sansgills.mode.python.wrapper;
 import java.io.File;
 import java.util.Arrays;
 
-import org.python.core.Py;
-import org.python.core.PyObject;
-import org.python.core.PyString;
-import org.python.core.PySystemState;
+import org.python.core.*;
 import org.python.util.InteractiveConsole;
 
 /**
@@ -31,6 +28,10 @@ import org.python.util.InteractiveConsole;
 public class ProcessingJythonWrapper {
 	
 	//EVERYTHING IS STATIC
+
+	static final String[] sketchFunctions = { "setup", "draw", "mousePressed",
+			"mouseReleased", "mouseClicked", "mouseWheel", "mouseMoved",
+			"mouseDragged", "keyPressed", "keyReleased", "keyTyped" };
 	
 	static InteractiveConsole interp;		// python interpreter to feed things to
 	static PySystemState sys;				// for modifying python classpath, as yet
@@ -64,7 +65,7 @@ public class ProcessingJythonWrapper {
 		sys.add_package("processing.opengl");
 		
 		try {
-			//run the script we were given; should define a PythonPApplet subclass and create an instance
+			//run the script we were given
 			interp.execfile(scriptPath);
 			
 			//get the applet we constructed
@@ -75,6 +76,15 @@ public class ProcessingJythonWrapper {
 				constructedApplet = (PythonPApplet) pythonApplet.__tojava__(PythonPApplet.class);
 			} else {
 				throw new Exception("Couldn't construct applet.");
+			}
+			
+			//go through functions the sketch might have defined and give them to the applet
+			for (String name : sketchFunctions){
+				PyFunction function = (PyFunction) interp.get(name);
+				if(function != null){
+					System.out.println("found "+name);
+					constructedApplet.inject(name, function);
+				}
 			}
 			
 			//run the sketch!

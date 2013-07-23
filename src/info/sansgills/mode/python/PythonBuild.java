@@ -2,6 +2,8 @@ package info.sansgills.mode.python;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import processing.app.Base;
 import processing.app.Library;
@@ -85,16 +87,37 @@ public class PythonBuild {
 		}
 	}
 	
+	//Some regexes
+	//A hack, but much less work than a full parser, and we don't need to do very much
+	private static Pattern getPressed;		//replace mousePressed / keyPressed with 
+	private static Pattern instanceVars;	//replace 'mouseX' with __applet__.mouseX, etc.
+	
+	static{
+		getPressed = Pattern.compile("(?<!def\\s{1,100})(mousePressed|keyPressed)");
+		instanceVars = Pattern.compile("(mouseX|mouseY|pmouseX|pmouseY|mouseButton|keyCode|key)");
+	}
+	
 	
 	
 	/*
 	 * Turn .pde into valid python
 	 */
 	private String preprocess(StringBuilder program){
+		System.out.println("Preprocessing");
 		try{
+			String temp;
 			
+			Matcher regex = getPressed.matcher(program);
+			
+			temp = regex.replaceAll("get$1()");
+			
+			regex = instanceVars.matcher(temp);
+			
+			temp = regex.replaceAll("__applet__.$1");
+			
+			program = new StringBuilder(temp);
+						
 			program.insert(0, prepend);
-			program.append(append);
 			
 		}catch(Exception e){
 			

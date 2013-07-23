@@ -65,13 +65,13 @@ public class PythonRunner {
 				
 		String[] out = args.toArray(new String[0]);
 		
-		{//debugging
+		/*{//debugging
 			String cmd = "";
 			for (String c : out) {
 				cmd += c + " ";
 			}
 			System.out.println("command: " + cmd);
-		}
+		}*/
 		
 		return out;
 	}

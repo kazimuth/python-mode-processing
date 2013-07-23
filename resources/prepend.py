@@ -59,10 +59,16 @@ def __mul__(a, b):
 __applet__ = PythonPApplet()
 g = globals()
 
+getmousePressed = __applet__.getmousePressed
+getkeyPressed = __applet__.getkeyPressed
+
 for method in PythonPApplet.staticMethods:
 	g[method] = PApplet.__dict__[method]
 
-for method in PythonPApplet.instanceMethods:
-	g[method] = lambda *args: PApplet.__dict__[method](__applet__, *args)
+def get_inst(method):
+	return lambda *args: PApplet.__dict__[method](__applet__, *args)
 
-del monkeypatch_method, RealPVector, PApplet, PythonPApplet, g
+for method in PythonPApplet.instanceMethods:
+	g[method] = get_inst(method)
+
+del monkeypatch_method, g, __sub__, __add__, __mul__, method, get_inst

@@ -6,6 +6,7 @@ Read in and concatenate user code
 Search & replace user-readable PApplet instance variables (mouseX, mouseY, pmouseX, pmouseY, mouseButton, mousePressed, key, keyCode, keyPressed)
 	with __applet__.[var]
 Check if user code defines setup(); if not, surround with setup() function definition
+Make sure user isn't misdefining things?
 Process user globals?
 prepend prepend.py
 write to file

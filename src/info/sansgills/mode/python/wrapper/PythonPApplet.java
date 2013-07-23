@@ -1,6 +1,10 @@
 package info.sansgills.mode.python.wrapper;
 
+import java.util.HashMap;
+
 import processing.core.PApplet;
+import processing.event.MouseEvent;
+
 import org.python.core.*;
 
 /**
@@ -37,17 +41,15 @@ public class PythonPApplet extends PApplet {
 			"createGraphics", "createImage", "createInput", "createOutput",
 			"createReader", "createShape", "createWriter", "cursor", "curve",
 			"curveDetail", "curvePoint", "curveTangent", "curveTightness",
-			"curveVertex", "directionalLight", "draw", "ellipse",
+			"curveVertex", "directionalLight", "ellipse",
 			"ellipseMode", "emissive", "endCamera", "endContour", "endRaw",
 			"endRecord", "endShape", "exit", "fill", "filter", "frameRate",
-			"frustum", "get", "hint", "hue", "image", "imageMode",
-			"keyPressed", "keyReleased", "keyTyped", "lerpColor",
+			"frustum", "get", "hint", "hue", "image", "imageMode", "lerpColor",
 			"lightFalloff", "lightSpecular", "lights", "line", "loadBytes",
 			"loadFont", "loadImage", "loadJSONArray", "loadJSONObject",
 			"loadPixels", "loadShader", "loadShape", "loadStrings",
 			"loadTable", "loadXML", "loop", "millis", "modelX", "modelY",
-			"modelZ", "mouseClicked", "mouseDragged", "mouseMoved",
-			"mousePressed", "mouseReleased", "mouseWheel", "noCursor",
+			"modelZ", "noCursor",
 			"noFill", "noLights", "noLoop", "noSmooth", "noStroke", "noTint",
 			"noise", "noiseDetail", "noiseSeed", "normal", "ortho", "parseXML",
 			"perspective", "point", "pointLight", "popMatrix", "popStyle",
@@ -68,14 +70,73 @@ public class PythonPApplet extends PApplet {
 	
 	
 	
+	private HashMap<String, PyFunction> sketchFunctions;
+	
+	public PythonPApplet(){
+		super();
+		
+		sketchFunctions = new HashMap<String, PyFunction>();
+	}
+	
+	public void inject(String name, PyFunction function){
+		sketchFunctions.put(name, function);
+	}
+	
+	//woo
+	
+	@Override
+	public void setup(){
+		if(sketchFunctions.containsKey("setup")) sketchFunctions.get("setup").__call__();
+	}
+	@Override
+	public void draw(){
+		if(sketchFunctions.containsKey("draw")) sketchFunctions.get("draw").__call__();
+	}
+	@Override
+	public void mousePressed(){
+		if(sketchFunctions.containsKey("mousePressed")) sketchFunctions.get("mousePressed").__call__();
+	}
+	@Override
+	public void mouseReleased(){
+		if(sketchFunctions.containsKey("mouseReleased")) sketchFunctions.get("mouseReleased").__call__();
+	}
+	@Override
+	public void mouseClicked(){
+		if(sketchFunctions.containsKey("mouseClicked")) sketchFunctions.get("mouseClicked").__call__();
+	}
+	@Override
+	public void mouseMoved(){
+		if(sketchFunctions.containsKey("mouseMoved")) sketchFunctions.get("mouseMoved").__call__();
+	}
+	@Override
+	public void mouseDragged(){
+		if(sketchFunctions.containsKey("mouseDragged")) sketchFunctions.get("mouseDragged").__call__();
+	}
+	@Override
+	public void mouseWheel(){ //TODO fix
+		if(sketchFunctions.containsKey("mouseWheel")) sketchFunctions.get("mouseWheel").__call__();
+	}
+	@Override
+	public void keyPressed(){
+		if(sketchFunctions.containsKey("keyPressed")) sketchFunctions.get("keyPressed").__call__();
+	}
+	@Override
+	public void keyReleased(){
+		if(sketchFunctions.containsKey("keyReleased")) sketchFunctions.get("keyReleased").__call__();
+	}
+	@Override
+	public void keyTyped(){
+		if(sketchFunctions.containsKey("keyTyped")) sketchFunctions.get("keyTyped").__call__();
+	}
 	
 	
 	// workaround for naming conflicts
-	public boolean getMousePressed(){
+	// not properly camelcased because regex, and noone is going to see it anyway
+	public boolean getmousePressed(){
 		return mousePressed;
 	}
 	
-	public boolean getKeyPressed(){
+	public boolean getkeyPressed(){
 		return keyPressed;
 	}
 }
