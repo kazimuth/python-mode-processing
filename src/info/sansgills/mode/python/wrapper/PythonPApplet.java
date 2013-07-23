@@ -20,7 +20,7 @@ import org.python.core.*;
 public class PythonPApplet extends PApplet {
 	
 	//Accessed from prepend.py
-	public static String[] staticMethods = { "abs", "acos", "append",
+	public static final String[] staticMethods = { "abs", "acos", "append",
 			"arrayCopy", "asin", "atan", "atan2", "binary", "blendColor",
 			"ceil", "concat", "constrain", "cos", "createInput",
 			"createOutput", "createReader", "createWriter", "day", "debug",
@@ -32,43 +32,44 @@ public class PythonPApplet extends PApplet {
 			"saveBytes", "saveStream", "saveStrings", "second", "shorten",
 			"sin", "sort", "splice", "split", "splitTokens", "sq", "sqrt",
 			"subset", "tan", "trim", "unbinary", "unhex", "year" };
-	public static String[] instanceMethods = { "alpha", "ambient",
-			"ambientLight", "applyMatrix", "arc", "background", "beginCamera",
-			"beginContour", "beginRaw", "beginRecord", "beginShape", "bezier",
-			"bezierDetail", "bezierPoint", "bezierTangent", "bezierVertex",
-			"blend", "blendMode", "blue", "box", "brightness", "camera",
-			"clear", "color", "colorMode", "copy", "createFont",
-			"createGraphics", "createImage", "createInput", "createOutput",
-			"createReader", "createShape", "createWriter", "cursor", "curve",
-			"curveDetail", "curvePoint", "curveTangent", "curveTightness",
-			"curveVertex", "directionalLight", "ellipse",
-			"ellipseMode", "emissive", "endCamera", "endContour", "endRaw",
-			"endRecord", "endShape", "exit", "fill", "filter", "frameRate",
-			"frustum", "get", "hint", "hue", "image", "imageMode", "lerpColor",
-			"lightFalloff", "lightSpecular", "lights", "line", "loadBytes",
-			"loadFont", "loadImage", "loadJSONArray", "loadJSONObject",
-			"loadPixels", "loadShader", "loadShape", "loadStrings",
-			"loadTable", "loadXML", "loop", "millis", "modelX", "modelY",
-			"modelZ", "noCursor",
-			"noFill", "noLights", "noLoop", "noSmooth", "noStroke", "noTint",
-			"noise", "noiseDetail", "noiseSeed", "normal", "ortho", "parseXML",
-			"perspective", "point", "pointLight", "popMatrix", "popStyle",
-			"printCamera", "printMatrix", "printProjection", "pushMatrix",
-			"pushStyle", "quad", "quadraticVertex", "random", "randomGaussian",
-			"randomSeed", "rect", "rectMode", "red", "redraw", "requestImage",
-			"resetMatrix", "resetShader", "rotate", "rotateX", "rotateY",
-			"saturation", "save", "saveBytes", "saveFrame", "saveJSONArray",
-			"saveJSONObject", "saveStream", "saveStrings", "saveTable",
-			"saveXML", "scale", "screenX", "screenY", "screenZ",
-			"selectFolder", "selectInput", "selectOutput", "shader", "shape",
-			"shapeMode", "shearX", "shearY", "shininess", "size", "smooth",
-			"specular", "sphere", "sphereDetail", "spotLight", "stroke",
-			"strokeCap", "strokeJoin", "strokeWeight", "text", "textAlign",
-			"textAscent", "textDescent", "textFont", "textLeading", "textMode",
-			"textSize", "textWidth", "texture", "textureMode", "tint",
-			"translate", "triangle", "updatePixels", "vertex" };	
 	
-	
+	public static final String[] constants = { "ADD", "ALPHA", "ALT",
+			"AMBIENT", "ARC", "ARGB", "ARROW", "BACKSPACE", "BASELINE",
+			"BEVEL", "BEZIER_VERTEX", "BLEND", "BLUR", "BOTTOM", "BOX",
+			"BREAK", "BURN", "CENTER", "CHATTER", "CHORD", "CLAMP", "CLOSE",
+			"CODED", "COMPLAINT", "CONTROL", "CORNER", "CORNERS", "CROSS",
+			"CURVE_VERTEX", "CUSTOM", "DARKEST", "DEG_TO_RAD", "DELETE",
+			"DIAMETER", "DIFFERENCE", "DILATE", "DIRECTIONAL",
+			"DISABLE_DEPTH_MASK", "DISABLE_DEPTH_SORT", "DISABLE_DEPTH_TEST",
+			"DISABLE_NATIVE_FONTS", "DISABLE_OPENGL_ERRORS",
+			"DISABLE_OPTIMIZED_STROKE", "DISABLE_RETINA_PIXELS",
+			"DISABLE_STROKE_PERSPECTIVE", "DISABLE_STROKE_PURE",
+			"DISABLE_TEXTURE_MIPMAPS", "DODGE", "DOWN", "DXF", "ELLIPSE",
+			"ENABLE_DEPTH_MASK", "ENABLE_DEPTH_SORT", "ENABLE_DEPTH_TEST",
+			"ENABLE_NATIVE_FONTS", "ENABLE_OPENGL_ERRORS",
+			"ENABLE_OPTIMIZED_STROKE", "ENABLE_RETINA_PIXELS",
+			"ENABLE_STROKE_PERSPECTIVE", "ENABLE_STROKE_PURE",
+			"ENABLE_TEXTURE_MIPMAPS", "ENTER", "EPSILON", "ERODE",
+			"ERROR_BACKGROUND_IMAGE_FORMAT", "ERROR_BACKGROUND_IMAGE_SIZE",
+			"ERROR_PUSHMATRIX_OVERFLOW", "ERROR_PUSHMATRIX_UNDERFLOW",
+			"ERROR_TEXTFONT_NULL_PFONT", "ESC", "EXCLUSION", "GIF", "GRAY",
+			"GROUP", "HALF_PI", "HAND", "HARD_LIGHT", "HINT_COUNT", "HSB",
+			"IMAGE", "INVERT", "JAVA2D", "JPEG", "LANDSCAPE", "LEFT",
+			"LIGHTEST", "LINE", "LINE_LOOP", "LINE_STRIP", "LINES", "LINUX",
+			"MACOSX", "MAX_FLOAT", "MAX_INT", "MIN_FLOAT", "MIN_INT", "MITER",
+			"MODEL", "MODELVIEW", "MOVE", "MULTIPLY", "NORMAL", "OPAQUE",
+			"OPEN", "OPENGL", "ORTHOGRAPHIC", "OTHER", "OVERLAY", "P2D", "P3D",
+			"PATH", "PDF", "PERSPECTIVE", "PI", "PIE", "platformNames",
+			"POINT", "POINTS", "POLYGON", "PORTRAIT", "POSTERIZE", "PROBLEM",
+			"PROJECT", "PROJECTION", "QUAD", "QUAD_BEZIER_VERTEX",
+			"QUAD_STRIP", "QUADS", "QUARTER_PI", "RAD_TO_DEG", "RADIUS",
+			"RECT", "REPEAT", "REPLACE", "RETURN", "RGB", "RIGHT", "ROUND",
+			"SCREEN", "SHAPE", "SHIFT", "SOFT_LIGHT", "SPHERE", "SPOT",
+			"SQUARE", "SUBTRACT", "TAB", "TARGA", "TAU", "TEXT", "THIRD_PI",
+			"THRESHOLD", "TIFF", "TOP", "TRIANGLE", "TRIANGLE_FAN",
+			"TRIANGLE_STRIP", "TRIANGLES", "TWO_PI", "UP", "VERTEX", "WAIT",
+			"WHITESPACE", "WINDOWS", "X", "Y", "Z" };
+
 	
 	private HashMap<String, PyFunction> sketchFunctions;
 	
@@ -138,5 +139,9 @@ public class PythonPApplet extends PApplet {
 	
 	public boolean getkeyPressed(){
 		return keyPressed;
+	}
+	
+	public float getframeRate(){
+		return frameRate;
 	}
 }

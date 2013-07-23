@@ -65,6 +65,9 @@
 				<path refid="library-classpath"/>
 			</classpath>
 		</javac>
+		
+		<copy file="${src}/${wrap.path}/prepend.py" tofile="${build}/${wrap.path}/prepend.py" />
+		
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
@@ -79,7 +82,7 @@
 		<!-- make mode jar -->
 		<jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build" includes="${lib.path}/*.class"/>
 		<!-- make wrapper jar -->
-		<jar jarfile="${bundle}/mode/${wrap.name}.jar" basedir="build" includes="${wrap.path}/*.class"/>
+		<jar jarfile="${bundle}/mode/${wrap.name}.jar" basedir="build" includes="${wrap.path}/*"/> <!-- include prepend.py -->
 		
 		
 		<copy todir="${bundle}">

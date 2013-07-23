@@ -76,25 +76,15 @@ public class PythonBuild {
 	
 	
 	//Things we don't need to reload every build
-	//Some small files we add to the beginning & end of sketches
-	private static String prepend;
-	static {
-		try{
-			prepend = Base.loadFile(new File(PythonMode.getModeFolder()+"prepend.py"));	
-		}catch(Exception e){
-			System.err.println("Error instantiating Python Mode");
-			e.printStackTrace();
-		}
-	}
-	
 	//Some regexes
 	//A hack, but much less work than a full parser, and we don't need to do very much
-	private static Pattern getPressed;		//replace mousePressed / keyPressed with 
+	private static Pattern getSpecial;		//replace mousePressed / keyPressed with 
 	private static Pattern instanceVars;	//replace 'mouseX' with __applet__.mouseX, etc.
 	
 	static{
-		getPressed = Pattern.compile("(?<!def\\s{1,100})(mousePressed|keyPressed)");
-		instanceVars = Pattern.compile("(mouseX|mouseY|pmouseX|pmouseY|mouseButton|keyCode|key)");
+		getSpecial = Pattern.compile("(?<!def\\s{1,1000})(mousePressed|keyPressed|frameRate)(?!\\s{0,1000}\\()");
+		instanceVars = Pattern.compile("(mouseX|mouseY|pmouseX|pmouseY|mouseButton|"
+				+"keyCode|key|pixels|width|height|displayWidth|displayHeight|focused|frameCount)");
 	}
 	
 	
@@ -103,11 +93,10 @@ public class PythonBuild {
 	 * Turn .pde into valid python
 	 */
 	private String preprocess(StringBuilder program){
-		System.out.println("Preprocessing");
 		try{
 			String temp;
 			
-			Matcher regex = getPressed.matcher(program);
+			Matcher regex = getSpecial.matcher(program);
 			
 			temp = regex.replaceAll("get$1()");
 			
@@ -115,17 +104,13 @@ public class PythonBuild {
 			
 			temp = regex.replaceAll("__applet__.$1");
 			
-			program = new StringBuilder(temp);
-						
-			program.insert(0, prepend);
+			return temp;
 			
 		}catch(Exception e){
-			
 			System.err.println("Preprocessing failed.");
 			e.printStackTrace();
-			
+			return null;
 		}
-		return program.toString();
 	}
 	
 	

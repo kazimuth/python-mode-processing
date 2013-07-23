@@ -2,6 +2,7 @@ package info.sansgills.mode.python.wrapper;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Scanner;
 
 import org.python.core.*;
 import org.python.util.InteractiveConsole;
@@ -28,7 +29,10 @@ import org.python.util.InteractiveConsole;
 public class ProcessingJythonWrapper {
 	
 	//EVERYTHING IS STATIC
-
+	
+	//Read in prepend.py from jar (this is the only one-liner to read in a stream, don't you love java)
+	static final String prepend = new Scanner(ProcessingJythonWrapper.class.getResourceAsStream("prepend.py")).useDelimiter("\\A").next();
+	
 	static final String[] sketchFunctions = { "setup", "draw", "mousePressed",
 			"mouseReleased", "mouseClicked", "mouseWheel", "mouseMoved",
 			"mouseDragged", "keyPressed", "keyReleased", "keyTyped" };
@@ -44,7 +48,7 @@ public class ProcessingJythonWrapper {
 	 * First argument is the path to the script; the rest are things to pass to PApplet.
 	 * 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		String scriptPath = args[0];
 		String[] params = Arrays.copyOfRange(args, 1, args.length);
 		run(scriptPath, params);
@@ -65,6 +69,9 @@ public class ProcessingJythonWrapper {
 		sys.add_package("processing.opengl");
 		
 		try {
+			//run prepend.py
+			interp.exec(prepend);
+			
 			//run the script we were given
 			interp.execfile(scriptPath);
 			
