@@ -7,6 +7,8 @@ import processing.app.syntax.JEditTextArea;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 
@@ -79,17 +81,10 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 
 		case 10: //return
 		case 13: //also return
-			char[] text = ptextarea.getText().toCharArray();	//text
-			int cursorLocation = ptextarea.getCaretPosition();	//location of element to be placed; may be out of bounds
+			String text = ptextarea.getText();	//text
+			int cursor = ptextarea.getCaretPosition();	//location of element to be placed; may be out of bounds
 			
-			int tabs = getTabCount(cursorLocation, text);
-						
-			String insert = "\n";
-			for(int i=0; i<tabs; i++){
-				insert += "\t";
-			}
-			
-			ptextarea.setSelectedText(insert);
+			ptextarea.setSelectedText(getIndent(cursor, text));
 			break;
 		}
 		
@@ -98,28 +93,36 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 		return false;
 	}
 	
-	//given an index and a block of text, find the number of tabs in the line containing the index
-	//TODO dirty hack
-	int getTabCount(int index, char[] text){
-		int prev = index-1; //the start of the line
-		
-		
-		//walk till we find the beginning of the line (or text)
-		while(prev >= 0 && text[prev] != '\n'){
-			prev--;
-		}
-		//prev is now at the previous newline
-		prev++;
-		
-		//prev is now at the beginning of the line
-		//walk forward, counting tabs
-		int tabCount = 0;
-		while(prev < text.length && text[prev] == '\t'){
-			tabCount++;
-			prev++;
-		}
-		
-		return tabCount;
-	}
+	private static Pattern findIndent = Pattern.compile("^((?: |\\t)*)");
+	private static Pattern incIndent = Pattern.compile(":( |\\t)*(#.*)?$"); //TODO fix; breaks on strings (":#"\n) and so on
 	
+	String getIndent(int cursor, String text){
+		if(cursor == 1) return "\n";
+		
+		int lineStart, lineEnd;
+		int i;
+		for(i = cursor - 1; i>=0 && text.charAt(i)!='\n'; i--);
+		lineStart = i+1;
+		for(i = cursor - 1; i<text.length() && text.charAt(i)!='\n' ; i++);
+		lineEnd = i;
+		
+		if(lineEnd <= lineStart) return "\n";
+		
+		String line = text.substring(lineStart, lineEnd);
+		
+		String indent;
+		Matcher f = findIndent.matcher(line);
+		
+		if(f.find()){
+			indent ='\n' + f.group();
+			
+			if (incIndent.matcher(line).find()){
+				indent += '\t';
+			}
+		}else{
+			indent = "\n";
+		}
+		
+		return indent;
+	}
 }

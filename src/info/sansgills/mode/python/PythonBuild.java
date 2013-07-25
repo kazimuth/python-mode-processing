@@ -16,6 +16,8 @@ import processing.app.SketchCode;
  * Class to handle the building of python files.
  * Given that python runs as an interpreter, all this does is handle preprocessing.
  * 
+ * See BUILD.md for notes.
+ * 
  */
 
 public class PythonBuild {
@@ -50,6 +52,7 @@ public class PythonBuild {
 		SketchCode[] parts = sketch.getCode(); //fix'd
 		
 		//concatenate code strings
+		//TODO do this in some sort of vaguely intelligent way
 		for(int i = parts.length-1; i >= 0; i--){	//iterate backwards... it seemed like a good idea at the time
 			program.append("\n");
 			program.append(parts[i].getProgram());
@@ -78,13 +81,16 @@ public class PythonBuild {
 	//Things we don't need to reload every build
 	//Some regexes
 	//A hack, but much less work than a full parser, and we don't need to do very much
-	private static Pattern getSpecial;		//replace mousePressed / keyPressed with 
+	private static Pattern getSpecial;		//replace mousePressed / keyPressed /frameRate with getmousePressed, etc.
 	private static Pattern instanceVars;	//replace 'mouseX' with __applet__.mouseX, etc.
+	private static Pattern findSetup, indent;	//for static-mode sketches
 	
 	static{
-		getSpecial = Pattern.compile("(?<!def\\s{1,1000})(mousePressed|keyPressed|frameRate)(?!\\s{0,1000}\\()");
+		getSpecial = Pattern.compile("(?<!def\\s{1,1000})(mousePressed|keyPressed|frameRate)(?![0-9a-zA-Z_])(?!\\s{0,1000}\\()");
 		instanceVars = Pattern.compile("(mouseX|mouseY|pmouseX|pmouseY|mouseButton|"
-				+"keyCode|key|pixels|width|height|displayWidth|displayHeight|focused|frameCount)");
+				+"keyCode|key|pixels|width|height|displayWidth|displayHeight|focused|frameCount)(?![0-9a-zA-Z_])");
+		findSetup = Pattern.compile("^def\\s+setup\\s*\\(\\s*\\)\\s*:", Pattern.MULTILINE);
+		indent = Pattern.compile("\r?\n");		
 	}
 	
 	
@@ -103,6 +109,20 @@ public class PythonBuild {
 			regex = instanceVars.matcher(temp);
 			
 			temp = regex.replaceAll("__applet__.$1");
+			
+			regex = findSetup.matcher(temp);
+			
+			if(!regex.find()){
+				//no setup function; static mode sketch
+				//TODO handle bad indentation
+				program = new StringBuilder(temp);
+				program.append("\nnoLoop()\n");			//no need to call draw()
+				program.insert(0, "def setup():\n");	//put the whole function in setup()
+				
+				regex = indent.matcher(program);
+				
+				temp = regex.replaceAll("\n\t");		//indent everything a level! (except the first line)
+			}
 			
 			return temp;
 			
@@ -169,7 +189,6 @@ public class PythonBuild {
 				+ "PythonMode"
 				+ File.separator
 				+ "mode";
-		System.out.println(jythonModeLib);
 		cp += Base.contentsToClassPath(new File(jythonModeLib));
 		
 		

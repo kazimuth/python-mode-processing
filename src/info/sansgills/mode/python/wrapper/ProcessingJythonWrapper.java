@@ -1,5 +1,6 @@
 package info.sansgills.mode.python.wrapper;
 
+import java.awt.GraphicsDevice;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -26,8 +27,6 @@ import org.python.util.InteractiveConsole;
  */
 
 public class ProcessingJythonWrapper {
-	
-	
 	//Read in some scripts from the jar (this is the only one-liner to read in a stream, don't you love java)
 	static final String prepend;
 	static final String scrub;
@@ -109,5 +108,14 @@ public class ProcessingJythonWrapper {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+	
+	public static void scrub(){
+		interp.exec(scrub);
+	}
+	
+	public static void runSketch(String[] params, PythonPApplet constructedApplet){
+		GraphicsDevice displayDevice;
+		
 	}
 }

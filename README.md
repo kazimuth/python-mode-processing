@@ -9,32 +9,33 @@ Inspired by the handsome [processing.py](https://github.com/jdf/processing.py).
 
 This is very much a work-in-progress. Don't expect it to work very well right now.
 
-To install: unzip PythonMode.zip into "{your sketchfolder}/modes/PythonMode" and restart Processing.
+To install: unzip PythonMode.zip into "{your sketch folder}/modes/PythonMode" and restart Processing.
 
 Check build.xml for building instructions.
 
 Done:
 - Basic functionality- running python code
 - Basic indentation & highlighting
+- Basic preprocessor
 
 Currently working on:
-- Preprocessor
+- Architechture
 
 Future work:
 - Better autoindent & syntax highlighting
+- Proper parser for the preprocessor
 - REPL for live coding
 
-As I don't have the preprocessor done, code isn't very pretty right now, but it works!
 A working sketch (copy and paste into the PDE to try it out!):
 	
-	class Placeholder(PApplet):
-		def setup(self):
-			self.size(200, 200)
-			self.background(0)
-			self.noStroke()
-			self.ellipseMode(PApplet.CENTER)
+	def setup():
+		size(300, 300)
+		smooth()
+		stroke(255)
+		background(0)
 	
-		def draw(self):
-			self.ellipse(self.mouseX, self.mouseY, 5, 5)
+	def draw():
+		line(mouseX+random(-40, 40), mouseY+random(-40, 40), mouseX, mouseY)
 	
-	applet = Placeholder()
+	def keyPressed():
+		background(0)

@@ -9,14 +9,13 @@ import org.python.core.*;
 
 /**
  * 
- * Skeleton class to give applets something to inherit from.
- * May contain special things later.
+ * Class for python applets.
+ * Instead of overriding, they inject functions into it and it runs them.
+ * 
+ * Also provides information for creation of PApplet globals.
  *
  */
 
-// TODO fix keyPressed & other constants, not working right now (if keyPressed:
-// is always true and if keyPressed == True: is always false)
-// TODO this looks like naming conflict problems? print keyPressed returns a method...
 public class PythonPApplet extends PApplet {
 	
 	//Accessed from prepend.py
@@ -87,7 +86,15 @@ public class PythonPApplet extends PApplet {
 	
 	@Override
 	public void setup(){
-		if(sketchFunctions.containsKey("setup")) sketchFunctions.get("setup").__call__();
+		try{
+			if(sketchFunctions.containsKey("setup")) sketchFunctions.get("setup").__call__();
+		}catch(PyException e){
+			if(e.getCause() instanceof RendererChangeException){
+				// Processing uses this to signal a change in renderer
+				// chuck it up the stack
+				throw (RendererChangeException) e.getCause();
+			}
+		}
 	}
 	@Override
 	public void draw(){
