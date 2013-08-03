@@ -1,11 +1,19 @@
 package info.sansgills.mode.python.wrapper;
 
+import info.sansgills.mode.python.PythonEditor;
+
 import java.awt.GraphicsDevice;
+import java.awt.Point;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Scanner;
 
 import org.python.core.*;
 import org.python.util.InteractiveConsole;
+
+import processing.core.PApplet;
 
 /**
  * 
@@ -39,22 +47,38 @@ public class ProcessingJythonWrapper {
 			"mouseReleased", "mouseClicked", "mouseWheel", "mouseMoved",
 			"mouseDragged", "keyPressed", "keyReleased", "keyTyped" };
 	
+	static MessageReceiverThread receiver;
+	
 	static InteractiveConsole interp;		// python interpreter to feed things to
 	static PySystemState sys;				// for modifying python classpath, as yet
 	static PythonPApplet constructedApplet;	// Applet we pull from the interpreter
 	
 	static final String objname = "__applet__";
 	
+	static boolean parallel;
+	
 	/**
 	 * 
-	 * First argument is the path to the script; the rest are things to pass to PApplet.
+	 * First argument is the path to the script; the rest are things to pass to
+	 * PApplet.
 	 * 
 	 */
 	public static void main(String[] args) {
-		String scriptPath = args[0];
-		String[] params = Arrays.copyOfRange(args, 1, args.length);
-		prepare();
-		run(scriptPath, params);
+		if (args[0].indexOf("__PARALLEL__") != -1) {
+			parallel = true;
+			receiver = new MessageReceiverThread(System.in);
+			receiver.start();
+			// running from PDE
+		} else {
+			parallel = false;
+			String scriptPath = args[0];
+			String[] params = Arrays.copyOfRange(args, 1, args.length);
+			receiver = new MessageReceiverThread(System.in);
+			receiver.start();
+
+			prepare();
+			run(scriptPath, params);
+		}
 	}
 
 	public static void prepare() {
@@ -68,7 +92,21 @@ public class ProcessingJythonWrapper {
 		PySystemState.add_package("processing.opengl");
 	}
 	
-	
+	/*
+	 * Called by PythonPApplet when it's exiting
+	 * Get rid of all references to our applet
+	 * 
+	 * ...this tangle of callbacks probably makes me a bad person
+	 */
+	static void sketchExiting(){
+		if (parallel) {
+			scrub();
+			constructedApplet = null;
+			sys = null;
+		} else {
+			System.exit(0);
+		}
+	}
 
 	/*
 	 * Run.
@@ -95,18 +133,19 @@ public class ProcessingJythonWrapper {
 			for (String name : sketchFunctions){
 				PyFunction function = (PyFunction) interp.get(name);
 				if(function != null){
-					System.out.println("found "+name);
 					constructedApplet.inject(name, function);
 				}
 			}
 			
 			//run the sketch!
-			PythonPApplet.runSketch(params, constructedApplet);
+			PythonPApplet.runSketchOpen(params, constructedApplet);
 			
 		} catch (Exception e){
 			System.err.println("Error running sketch: " + e.getMessage()); //TODO
 			e.printStackTrace();
-			System.exit(1);
+			if(constructedApplet != null){
+				constructedApplet.exit();
+			}
 		}
 	}
 	
@@ -114,8 +153,37 @@ public class ProcessingJythonWrapper {
 		interp.exec(scrub);
 	}
 	
-	public static void runSketch(String[] params, PythonPApplet constructedApplet){
-		GraphicsDevice displayDevice;
+	
+	
+	/*
+	 * Class to handle receiving messages from the PDE
+	 * not to be confused with Communicator.MessageReceiverThread; same idea, different location
+	 */
+	private static class MessageReceiverThread extends Thread{
+		BufferedReader messageReader;
+		public boolean running;
 		
+		public MessageReceiverThread(InputStream messageStream){
+			this.messageReader = new BufferedReader(new InputStreamReader(messageStream));
+			this.running = true;
+		}
+		
+		public void run() {
+			try {
+				String currentLine;
+
+				// continually read messages
+				while ((currentLine = messageReader.readLine()) != null && running) {
+					try {
+						if (currentLine.indexOf("__STOP__") != -1) {
+							// PDE is telling us to kill the applet
+							if (constructedApplet != null) {
+								constructedApplet.exit();
+							}
+						}
+					} catch (Exception e) {}
+				}
+			} catch (Exception e) {}
+		}
 	}
 }

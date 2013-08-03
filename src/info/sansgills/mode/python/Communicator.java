@@ -4,7 +4,7 @@ import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.PrintWriter;
 
 import processing.app.exec.StreamRedirectThread;
 import processing.core.PApplet;
@@ -15,6 +15,7 @@ import processing.core.PApplet;
  * Handles sending messages to and recieving messages from
  *
  */
+
 public class Communicator {
 	private PythonEditor editor;
 	private Process sketchProcess;
@@ -22,7 +23,7 @@ public class Communicator {
 	private StreamRedirectThread outThread;
 	private MessageReceiverThread errThread;
 	
-	private OutputStream toSketch;
+	private PrintWriter toSketch;
 	
 	public Communicator (Process sketchProcess, PythonEditor editor){
 		this.sketchProcess = sketchProcess;
@@ -31,7 +32,7 @@ public class Communicator {
 		outThread = new StreamRedirectThread("JVM Stdout Reader", sketchProcess.getInputStream(), System.out);
 		errThread = new MessageReceiverThread(sketchProcess.getErrorStream(), editor);
 		
-		toSketch = sketchProcess.getOutputStream();
+		toSketch = new PrintWriter(sketchProcess.getOutputStream());
 		
 		outThread.start();
 		errThread.start();
@@ -41,8 +42,34 @@ public class Communicator {
 		errThread.running = false;
 		errThread = null;
 		outThread = null;
+		toSketch.close();
+		toSketch = null;
 	}
 	
+	
+	// communication methods
+	
+	/*
+	 * Tell sketch to close
+	 */
+	public void sendClose(){
+		toSketch.println("__STOP__"); //hard-coded, what the hell
+		toSketch.flush();
+	}
+	
+	/*
+	 * Send a new sketch
+	 */
+	public void sendSketch(String[] args){
+		StringBuilder out = new StringBuilder("__SKETCH__");
+		for(String a : args){
+			out.append(" "+a);
+		}
+		
+		
+		toSketch.println(out.toString());
+		
+	}
 	
 	//private class to handle doing things when the sketch process sends us a message via system.err
 	private class MessageReceiverThread extends Thread{

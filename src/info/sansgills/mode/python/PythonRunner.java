@@ -2,12 +2,10 @@ package info.sansgills.mode.python;
 
 import java.awt.Point;
 import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
 
 import processing.app.Base;
 import processing.app.Preferences;
-import processing.app.exec.StreamRedirectThread;
 import processing.core.PApplet;
 
 /**
@@ -45,6 +43,7 @@ public class PythonRunner {
 	 * Construct the command-line command to start the sketch with
 	 * 
 	 * TODO add proper machine detection & whatnot from Java Mode
+	 * 
 	 */
 	private String[] buildArgs(boolean present){
 		ArrayList<String> args = new ArrayList<String>();
@@ -63,15 +62,7 @@ public class PythonRunner {
 		appendSketchArgs(args, present);
 				
 		String[] out = args.toArray(new String[0]);
-		
-		/*{//debugging
-			String cmd = "";
-			for (String c : out) {
-				cmd += c + " ";
-			}
-			System.out.println("command: " + cmd);
-		}*/
-		
+				
 		return out;
 	}
 
@@ -152,7 +143,9 @@ public class PythonRunner {
 			args.add(PApplet.ARGS_STOP_COLOR + "=" + Preferences.get("run.present.stop.color"));
 			args.add(PApplet.ARGS_BGCOLOR + "=" + Preferences.get("run.present.bgcolor"));
 		}
-
+		
+		
+		args.add(PApplet.ARGS_EXTERNAL);
 		args.add(build.getClassName()); // sketch name
 	}
 	
@@ -178,10 +171,6 @@ public class PythonRunner {
 	 * Kill the code.
 	 */
 	public void close() {
-		communicator.close();
-		if(sketchProcess != null){
-			sketchProcess.destroy();
-			sketchProcess = null;
-		}
+		communicator.sendClose();
 	}
 }
