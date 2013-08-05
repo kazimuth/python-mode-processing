@@ -17,7 +17,7 @@ import processing.core.PApplet;
  */
 
 public class Communicator {
-	private PythonEditor editor;
+	private PythonRunner runner;
 	private Process sketchProcess;
 	
 	private StreamRedirectThread outThread;
@@ -25,12 +25,12 @@ public class Communicator {
 	
 	private PrintWriter toSketch;
 	
-	public Communicator (Process sketchProcess, PythonEditor editor){
+	public Communicator (Process sketchProcess, PythonRunner runner){
 		this.sketchProcess = sketchProcess;
-		this.editor = editor;
+		this.runner = runner;
 		
 		outThread = new StreamRedirectThread("JVM Stdout Reader", sketchProcess.getInputStream(), System.out);
-		errThread = new MessageReceiverThread(sketchProcess.getErrorStream(), editor);
+		errThread = new MessageReceiverThread(sketchProcess.getErrorStream(), runner);
 		
 		toSketch = new PrintWriter(sketchProcess.getOutputStream());
 		
@@ -38,7 +38,7 @@ public class Communicator {
 		errThread.start();
 	}
 	
-	public void close(){
+	public void destroy(){
 		errThread.running = false;
 		errThread = null;
 		outThread = null;
@@ -54,6 +54,7 @@ public class Communicator {
 	 */
 	public void sendClose(){
 		toSketch.println("__STOP__"); //hard-coded, what the hell
+		System.out.println("__STOP__");
 		toSketch.flush();
 	}
 	
@@ -68,19 +69,20 @@ public class Communicator {
 		
 		
 		toSketch.println(out.toString());
-		
+		System.out.println(out.toString());
+		toSketch.flush();
 	}
 	
 	//private class to handle doing things when the sketch process sends us a message via system.err
 	private class MessageReceiverThread extends Thread{
-		PythonEditor editor;
+		PythonRunner runner;
 		BufferedReader messageReader;
 		
 		public boolean running;
 		
-		public MessageReceiverThread(InputStream messageStream, PythonEditor editor){
+		public MessageReceiverThread(InputStream messageStream, PythonRunner runner){
 			this.messageReader = new BufferedReader(new InputStreamReader(messageStream));
-			this.editor = editor;
+			this.runner = runner;
 			this.running = true;
 		}
 		
@@ -90,19 +92,13 @@ public class Communicator {
 
 				// continually read messages
 				while ((currentLine = messageReader.readLine()) != null && running) {
-					if (currentLine.indexOf(PApplet.EXTERNAL_STOP) == 0) {
+					if (currentLine.indexOf("__STOPPED__") != -1) {
 						// sketch telling us it stopped
-						editor.internalCloseRunner();
+						runner.parallelStopped();
 						return;
-					}else if (currentLine.indexOf(PApplet.EXTERNAL_MOVE) == 0) {
-						//sketch telling us it moved
-						String nums = currentLine.substring(currentLine.indexOf(' ') + 1).trim();
-						int space = nums.indexOf(' ');
-						int left = Integer.parseInt(nums.substring(0, space));
-						int top = Integer.parseInt(nums.substring(space + 1));
-						editor.setSketchLocation(new Point(left, top));
-						return;
-					}else{
+					}else if(currentLine.indexOf("__STARTED__") != -1){
+						runner.parallelStarted();
+					} else{
 						System.err.println(currentLine);
 					}
 				}

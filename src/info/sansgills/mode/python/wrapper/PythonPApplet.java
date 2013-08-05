@@ -1,23 +1,10 @@
 package info.sansgills.mode.python.wrapper;
 
-import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Frame;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.Insets;
-import java.awt.Label;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.HashMap;
 
 import processing.core.PApplet;
+import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 
 import org.python.core.*;
@@ -32,6 +19,8 @@ import org.python.core.*;
  */
 
 public class PythonPApplet extends PApplet {
+	
+	static final String ARGS_SCRIPT = "--script";
 	
 	//Accessed from prepend.py
 	public static final String[] staticMethods = { "abs", "acos", "append",
@@ -168,363 +157,63 @@ public class PythonPApplet extends PApplet {
 	}
 	
 	
+	
+	
 	// special code to avoid killing the process when we close an applet
 	
-	boolean external;
-
+	// note: PApplet uses dispose() to get rid of resources; normally, it also calls System.exit.
+	// Luckily, we can override that behaviour
+	
+	boolean disposed = false, external;
+	
 	@Override
-	public void exit(){
-		if(external){
-			// tell the PDE we're exiting
-			System.err.println(PApplet.EXTERNAL_STOP);
-			System.err.flush();
+	public void dispose(){
+		if (!disposed) {
+			disposed = true;
+			super.dispose();
+			frame.dispose();
+
+			ProcessingJythonWrapper.sketchDisposed();
 		}
-		
-		dispose();
-		frame.dispose();
-		
-		ProcessingJythonWrapper.sketchExiting();
 	}
 	
-	/*
-	 * Add some things to tell the PDE when things happen
-	 */
+
 	@Override
-	public void setupExternalMessages() {
-		frame.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				Point where = ((Frame) e.getSource()).getLocation();
-				System.err.println(PApplet.EXTERNAL_MOVE+" "+where.x+" "+where.y);
-				System.err.flush(); // doesn't seem to help or hurt
-			}
-		});
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				//exit method handles sending messages; we're done here
-				exit();
-			}
-		});
-	}
-		
-	/*
-	 *  overriding PApplet's runSketch to avoid having it kill the process when it's done
-	 *  mostly copy-pasted from PApplet.java
-	 */
-	public static void runSketchOpen(final String args[], final PythonPApplet constructedApplet) {
-		// Disable abyssmally slow Sun renderer on OS X 10.5.
-		if (platform == MACOSX) {
-			// Only run this on OS X otherwise it can cause a permissions error.
-			// http://dev.processing.org/bugs/show_bug.cgi?id=976
-			System.setProperty("apple.awt.graphics.UseQuartz",
-					String.valueOf(useQuartz));
-		}
-
-		// Doesn't seem to do much to help avoid flicker
-		System.setProperty("sun.awt.noerasebackground", "true");
-
-
-		if (args.length < 1) {
-			System.err.println("Usage: PApplet <appletname>");
-			System.err.println("For additional options, "
-					+ "see the Javadoc for PApplet");
-			ProcessingJythonWrapper.sketchExiting();
-			return;
-		}
-
-		boolean external = false;
-		int[] location = null;
-		int[] editorLocation = null;
-
-		String name = null;
-		boolean present = false;
-		Color backgroundColor = null; 
-		Color stopColor = Color.GRAY;
-		GraphicsDevice displayDevice = null;
-		boolean hideStop = false;
-
-		String param = null, value = null;
-
-		// try to get the user folder. if running under java web start,
-		// this may cause a security exception if the code is not signed.
-		// http://processing.org/discourse/yabb_beta/YaBB.cgi?board=Integrate;action=display;num=1159386274
-		String folder = null;
-		try {
-			folder = System.getProperty("user.dir");
-		} catch (Exception e) {}
-
-		int argIndex = 0;
-		while (argIndex < args.length) {
-			int equals = args[argIndex].indexOf('=');
-			if (equals != -1) {
-				param = args[argIndex].substring(0, equals);
-				value = args[argIndex].substring(equals + 1);
-
-				if (param.equals(ARGS_EDITOR_LOCATION)) {
-					external = true;
-					editorLocation = parseInt(split(value, ','));
-
-				} else if (param.equals(ARGS_DISPLAY)) {
-					int deviceIndex = Integer.parseInt(value);
-
-					GraphicsEnvironment environment = GraphicsEnvironment
-							.getLocalGraphicsEnvironment();
-					GraphicsDevice devices[] = environment.getScreenDevices();
-					if ((deviceIndex >= 0) && (deviceIndex < devices.length)) {
-						displayDevice = devices[deviceIndex];
-					} else {
-						System.err.println("Display " + value
-								+ " does not exist, "
-								+ "using the default display instead.");
-						for (int i = 0; i < devices.length; i++) {
-							System.err.println(i + " is " + devices[i]);
-						}
-					}
-
-				} else if (param.equals(ARGS_BGCOLOR)) {
-					if (value.charAt(0) == '#')
-						value = value.substring(1);
-					backgroundColor = new Color(Integer.parseInt(value, 16));
-
-				} else if (param.equals(ARGS_STOP_COLOR)) {
-					if (value.charAt(0) == '#')
-						value = value.substring(1);
-					stopColor = new Color(Integer.parseInt(value, 16));
-
-				} else if (param.equals(ARGS_SKETCH_FOLDER)) {
-					folder = value;
-
-				} else if (param.equals(ARGS_LOCATION)) {
-					location = parseInt(split(value, ','));
-				}
-
-			} else {
-				if (args[argIndex].equals(ARGS_PRESENT)) { // keep for compatability
-					present = true;
-
-				} else if (args[argIndex].equals(ARGS_FULL_SCREEN)) {
-					present = true;
-
-				} else if (args[argIndex].equals(ARGS_HIDE_STOP)) {
-					hideStop = true;
-
-				} else if (args[argIndex].equals(ARGS_EXTERNAL)) {
-					external = true;
-
-				} else {
-					name = args[argIndex];
-					break; // because of break, argIndex won't increment again
-				}
-			}
-			argIndex++;
-		}
-
-		// Now that sketch path is passed in args after the sketch name
-		// it's not set in the above loop(the above loop breaks after
-		// finding sketch name). So setting sketch path here.
-		for (int i = 0; i < args.length; i++) {
-			if (args[i].startsWith(ARGS_SKETCH_FOLDER)) {
-				folder = args[i].substring(args[i].indexOf('=') + 1);
-			}
-		}
-
-		if (displayDevice == null) {
-			GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment();
-			displayDevice = environment.getDefaultScreenDevice();
-		}
-
-		Frame frame = new Frame(displayDevice.getDefaultConfiguration());
-		frame.setBackground(new Color(0xCC, 0xCC, 0xCC)); // default Processing gray
-
-		final PythonPApplet applet;
-		if (constructedApplet != null) {
-			applet = constructedApplet;
-		} else {
-			System.err.println("Where's the applet?");
-			return;
-		}
-
-		// Set the trimmings around the image
-		applet.setIconImage(frame);
-		frame.setTitle(name);
-
-		// A handful of things that need to be set before init/start.
-		applet.frame = frame;
-		applet.sketchPath = folder;
-		// Query the applet to see if it wants to be full screen all the time.
-		present |= applet.sketchFullScreen();
-		// pass everything after the class name in as args to the sketch itself
-		// (fixed for 2.0a5, this was just subsetting by 1, which didn't skip
-		// opts)
-		applet.args = PApplet.subset(args, argIndex + 1);
-		
-		applet.external = external;
-
-		// Need to save the window bounds at full screen,
-		// because pack() will cause the bounds to go to zero.
-		// http://dev.processing.org/bugs/show_bug.cgi?id=923
-		Rectangle screenRect = displayDevice.getDefaultConfiguration()
-				.getBounds();
-		// DisplayMode doesn't work here, because we can't get the upper-left
-		// corner of the display, which is important for multi-display setups.
-
-		// Sketch has already requested to be the same as the screen's
-		// width and height, so let's roll with full screen mode.
-		if (screenRect.width == applet.sketchWidth() && screenRect.height == applet.sketchHeight()) {
-			present = true;
-		}
-
-		// For 0149, moving this code (up to the pack() method) before init().
-		// For OpenGL (and perhaps other renderers in the future), a peer is
-		// needed before a GLDrawable can be created. So pack() needs to be
-		// called on the Frame before applet.init(), which itself calls size(),
-		// and launches the Thread that will kick off setup().
-		// http://dev.processing.org/bugs/show_bug.cgi?id=891
-		// http://dev.processing.org/bugs/show_bug.cgi?id=908
-		if (present) {
-			frame.setUndecorated(true);
-			if (backgroundColor != null) {
-				frame.setBackground(backgroundColor);
-			}
-			frame.setBounds(screenRect);
-			frame.setVisible(true);
-		}
-		frame.setLayout(null);
-		frame.add(applet);
-		if (present) {
-			frame.invalidate();
-		} else {
-			frame.pack();
-		}
-
-		// disabling resize has to happen after pack() to avoid apparent Apple bug
-		// http://code.google.com/p/processing/issues/detail?id=467
-		frame.setResizable(false);
-
-		applet.init();
-
-		// Wait until the applet has figured out its width.
-		// In a static mode app, this will be after setup() has completed,
-		// and the empty draw() has set "finished" to true.
-		// TODO make sure this won't hang if the applet has an exception.
-		while (applet.defaultSize && !applet.finished) {
-			try {
-				Thread.sleep(5);
-			} catch (InterruptedException e) {}
-		}
-
-		if (present) {
-			if (platform == MACOSX) {
-				// Call some native code to remove the menu bar on OS X. Not necessary
-				// on Linux and Windows, who are happy to make full screen windows.
-				japplemenubar.JAppleMenuBar.hide();
-			}
-
-			// After the pack(), the screen bounds are gonna be 0s
-			frame.setBounds(screenRect);
-			applet.setBounds((screenRect.width - applet.width) / 2,
-					(screenRect.height - applet.height) / 2, applet.width,
-					applet.height);
-
-			if (!hideStop) {
-				Label label = new Label("stop");
-				label.setForeground(stopColor);
-				label.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mousePressed(java.awt.event.MouseEvent e) {
-						applet.exit();
-					}
-				});
-				frame.add(label);
-
-				Dimension labelSize = label.getPreferredSize();
-				labelSize = new Dimension(100, labelSize.height);
-				label.setSize(labelSize);
-				label.setLocation(20, screenRect.height - labelSize.height - 20);
-			}
-
-			// not always running externally when in present mode
-			if (external) {
-				applet.setupExternalMessages();
-			}
-
-		} else { // if not presenting
-			// can't do pack earlier cuz present mode don't like it
-			// (can't go full screen with a frame after calling pack)
-			Insets insets = frame.getInsets();
-
-			int windowW = Math.max(applet.width, MIN_WINDOW_WIDTH)
-					+ insets.left + insets.right;
-			int windowH = Math.max(applet.height, MIN_WINDOW_HEIGHT)
-					+ insets.top + insets.bottom;
-
-			frame.setSize(windowW, windowH);
-
-			if (location != null) {
-				// a specific location was received from the Runner
-				// (applet has been run more than once, user placed window)
-				frame.setLocation(location[0], location[1]);
-
-			} else if (external && editorLocation != null) {
-				int locationX = editorLocation[0] - 20;
-				int locationY = editorLocation[1];
-
-				if (locationX - windowW > 10) {
-					// if it fits to the left of the window
-					frame.setLocation(locationX - windowW, locationY);
-
-				} else { // doesn't fit
-					// if it fits inside the editor window,
-					// offset slightly from upper lefthand corner
-					// so that it's plunked inside the text area
-					locationX = editorLocation[0] + 66;
-					locationY = editorLocation[1] + 66;
-
-					if ((locationX + windowW > applet.displayWidth - 33)
-							|| (locationY + windowH > applet.displayHeight - 33)) {
-						// otherwise center on screen
-						locationX = (applet.displayWidth - windowW) / 2;
-						locationY = (applet.displayHeight - windowH) / 2;
-					}
-					frame.setLocation(locationX, locationY);
-				}
-			} else { // just center on screen
-				// Can't use frame.setLocationRelativeTo(null) because it sends
-				// the
-				// frame to the main display, which undermines the --display
-				// setting.
-				frame.setLocation(screenRect.x
-						+ (screenRect.width - applet.width) / 2, screenRect.y
-						+ (screenRect.height - applet.height) / 2);
-			}
-			Point frameLoc = frame.getLocation();
-			if (frameLoc.y < 0) {
-				// Windows actually allows you to place frames where they can't be closed. Awesome.
-				// http://dev.processing.org/bugs/show_bug.cgi?id=1508
-				frame.setLocation(frameLoc.x, 30);
-			}
-
-			if (backgroundColor != null) {
-				frame.setBackground(backgroundColor);
-			}
-
-			int usableWindowH = windowH - insets.top - insets.bottom;
-			applet.setBounds((windowW - applet.width) / 2, insets.top
-					+ (usableWindowH - applet.height) / 2, applet.width,
-					applet.height);
+	public void exit() {
+		if (disposed) {
+			// nothing to do here, dispose handles actual exiting and it's already been called
 			
-			// send messages back to the PDE
-			if (external) {
-				applet.setupExternalMessages();
-			}
-			// handle frame resizing events
-			applet.setupFrameResizeListener();
+		} else if (looping) {
+			// dispose() will be called as the thread exits
+			finished = true;
+			
+			// there's also a variable called exitCalled which we're NOT setting, because it causes a System.exit
+			// in the draw thread
+			
+		} else if (!looping) {
+			// if not looping, shut down things explicitly,
+			// because the main thread will be sleeping
+			dispose();
+		}
+	}
 
-			// all set for rockin
-			if (applet.displayable()) {
-				frame.setVisible(true);
-			}
+	public void connectFrame(Frame frame){
+		this.frame = frame;
+		setIconImage(frame);
+		frame.setLayout(null);
+		frame.add(this);
+	}
+	
+	protected void handleKeyEvent(KeyEvent event) {
+		super.handleKeyEvent(event);
+		
+		// workaround; ctrl-W is supposed to close the PApplet,
+		// but it only does so if PApplet.external is true, and that's
+		// package-private, so we have our own copy
+		if (external && event.getKeyCode() == 'W' 
+				&& ((event.isMetaDown() && platform == MACOSX) 
+						|| (event.isControlDown() && platform != MACOSX))) {
+			exit();
 		}
 	}
 }

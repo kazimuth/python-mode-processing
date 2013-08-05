@@ -34,6 +34,8 @@ public class PythonEditor extends Editor {
 	protected PythonEditor(final Base base, String path, EditorState state, final Mode mode) {
 		super(base, path, state, mode);
 		
+		runner = new PythonRunner(this);
+		
 		listener = new PythonKeyListener(this, textarea); //black magic
 		pyMode = (PythonMode) mode; //convenience
 	}
@@ -132,7 +134,6 @@ public class PythonEditor extends Editor {
 	
 	//Note that I'm doing the build here instead of in PythonMode, because of simplicity
 	public void handleRun() {
-		final PythonEditor self = this; //there must be a more elegant way to do this.
 		new Thread(new Runnable(){
 			public void run(){
 				toolbar.activate(PythonToolbar.RUN);			//pretty lights
@@ -143,14 +144,12 @@ public class PythonEditor extends Editor {
 				} catch (Exception e){
 					statusError(e);								//do something pretty?
 				}
-				runner = new PythonRunner(build, self);			//create runtime (can't use 'this', this is a runnable)
-				runner.launch(false);							//launch runtime; present = false
+				runner.launch(build, false);							//launch runtime; present = false
 			}
 		}).start();
 	}
 
 	public void handlePresent() {
-		final PythonEditor self = this;
 		new Thread(new Runnable() {
 			public void run() {
 				toolbar.activate(PythonToolbar.RUN);
@@ -161,8 +160,7 @@ public class PythonEditor extends Editor {
 				} catch (Exception e){
 					statusError(e);
 				}
-				runner = new PythonRunner(build, self);
-				runner.launch(true);							//present = true
+				runner.launch(build, true);							//present = true
 			}
 		}).start();
 	}
@@ -170,10 +168,7 @@ public class PythonEditor extends Editor {
 	public void handleStop() { //copied wholesale from Java Mode
 		toolbar.activate(PythonToolbar.STOP);
 		try {
-	      if (runner != null) {
-	        runner.close();  // kills the window
-	        runner = null;
-	      }
+	      runner.internalClose();
 	    } catch (Exception e) {
 	      statusError(e);
 	    }
