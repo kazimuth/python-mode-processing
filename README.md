@@ -19,11 +19,11 @@ Done:
 - Basic preprocessor
 
 Currently working on:
-- Architechture
+- Proper parser for the preprocessor
 
 Future work:
+- Library imports and sketch exports
 - Better autoindent & syntax highlighting
-- Proper parser for the preprocessor
 - REPL for live coding
 
 A working sketch (copy and paste into the PDE to try it out!):

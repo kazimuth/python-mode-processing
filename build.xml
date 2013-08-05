@@ -35,7 +35,7 @@
 		</fileset>
 
 		<fileset dir="lib" >
-			<include name="*.jar" /> <!-- jython -->
+			<include name="*.jar" /> <!-- jython and antlr runtime -->
 		</fileset>
 	</path>
 	
@@ -44,11 +44,22 @@
 	- - - - - - - - - - - - - - - - - - - - - - - -->
 	<target name="get">
 		<mkdir dir="lib" />
+		<mkdir dir="tool" />
 		<get 
 			src="http://search.maven.org/remotecontent?filepath=org/python/jython-standalone/2.7-b1/jython-standalone-2.7-b1.jar" 
 			dest="lib/jython-standalone-2.7-b1.jar" 
 			skipexisting="true"
 			verbose="true" /> <!-- download latest jython (note: update this if jython updates) -->
+		<get
+			src="http://www.antlr.org/download/antlr-runtime-4.1.jar"
+			dest="lib/antlr-runtime-4.1.jar"
+			skipexisting="true"
+			verbose="true" /> <!-- download latest ANTLR runtime (to include with the mode) -->
+		<get
+			src="http://antlr4.org/download/antlr-4.1-complete.jar"
+			dest="tool/antlr-4.1-complete.jar"
+			skipexisting="true"
+			verbose="true" /> <!-- download latest ANTLR compiler (to compile our grammars; not included) -->
 	</target>
 	
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
@@ -83,7 +94,7 @@
 		<!-- make mode jar -->
 		<jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build" includes="${lib.path}/*.class"/>
 		<!-- make wrapper jar -->
-		<jar jarfile="${bundle}/mode/${wrap.name}.jar" basedir="build" includes="${wrap.path}/*"/> <!-- include prepend.py -->
+		<jar jarfile="${bundle}/mode/${wrap.name}.jar" basedir="build" includes="${wrap.path}/*"/> <!-- include *.py -->
 		
 		
 		<copy todir="${bundle}">
@@ -124,6 +135,9 @@
 	<target name="clean" >
 		<delete dir="${build}" />
 		<delete dir="${dist}" />
+		<delete>
+			<fileset dir="${src}/info/sansgills/mode/python/preproc" includes="*.java *.tokens" /> <!-- remove generated files -->
+		</delete>
 	</target>
 	
 </project>
