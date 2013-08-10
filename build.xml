@@ -6,7 +6,7 @@
 	<!-- You'll want to change these to compile. -->
 	<property name="processing.base" 			location="C:\Dev\processing-2.0.1-windows64\processing-2.0.1" /> 	<!-- The directory that you unpacked Processing into. -->
 	<property name="processing.sketchfolder" 	location="C:\Dev\Processing" />										<!-- Your sketchbook folder. -->
-	<property name="java.target.bootclasspath"	location="C:\Program Files\Java\jdk1.6.0_45\jre\lib\rt.jar" />		<!-- If you're using a newer jdk -->
+	<property name="java.target.bootclasspath"	location="C:\Program Files\Java\jdk1.6.0_38\jre\lib\rt.jar" />		<!-- If you're using a newer jdk -->
 	
 	<!-- Leave these be. -->
 	<description>Python Mode for Processing 2.0.</description>
@@ -17,13 +17,14 @@
 	<property name="java.target.version" value="1.6" />
 	
 	<property name="src" 		value="src" />
+	<property name="gen"		value="generated" />
 	<property name="build" 		value="build" />
-	<property name="bin" 		value="bin" />
 	<property name="dist" 		value="dist" />
 	<property name="releasedir"	value="release" />
 	
 	<property name="lib.path"	value="info/sansgills/mode/python" />
 	<property name="wrap.path"	value="info/sansgills/mode/python/wrapper" />
+	<property name="preproc.path"	value="info/sansgills/mode/python/preproc" />
 
 	<path id="library-classpath">
 		<fileset dir="${processing.base}/core/library/" > <!-- processing core -->
@@ -38,6 +39,10 @@
 			<include name="*.jar" /> <!-- jython and antlr runtime -->
 		</fileset>
 	</path>
+	
+	<condition property="gen.present">
+		<available file="${gen}" />
+	</condition>
 	
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
 		GET
@@ -62,20 +67,39 @@
 			verbose="true" /> <!-- download latest ANTLR compiler (to compile our grammars; not included) -->
 	</target>
 	
+	
+	
+	<target name="generate" depends="get" unless="gen.present">
+		<mkdir dir="${gen}" />
+		<java jar="tool/antlr-4.1-complete.jar" fork="true">
+			<arg value="-no-listener" />
+			<arg value="-visitor" />
+			<arg value="-lib" />
+			<arg value="${basedir}/${src}/${preproc.path}" />
+			<arg value="-o" />
+			<arg value="${basedir}/${gen}/${preproc.path}" />
+			<arg value="${basedir}/${src}/${preproc.path}/PyPde.g4" />
+		</java>
+	</target>
+	
+	
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
 		BUILD
 	- - - - - - - - - - - - - - - - - - - - - - - -->
-	<target name="build" depends="get">
+	<target name="build" depends="get,generate">
 		<propertyfile file="build.number" /> <!-- create the build.number file if it doesn't exist -->
 		<buildnumber file="build.number" />
 				
 		<mkdir dir="${build}" />
 		
-		<javac srcdir="${src}" destdir="${build}" source="${java.target.version}" target="${java.target.version}" bootclasspath="${java.target.bootclasspath}" includeantruntime="false" debug="true">
+		<javac destdir="${build}" source="${java.target.version}" target="${java.target.version}" bootclasspath="${java.target.bootclasspath}" includeantruntime="false" debug="true">
+			<src path="${src}" />
+			<src path="${gen}" />
 			<classpath>
 				<path refid="library-classpath"/>
 			</classpath>
 		</javac>
+		
 		
 		<copy file="${src}/${wrap.path}/prepend.py" tofile="${build}/${wrap.path}/prepend.py" />
 		<copy file="${src}/${wrap.path}/scrub.py" tofile="${build}/${wrap.path}/scrub.py" />
@@ -135,9 +159,10 @@
 	<target name="clean" >
 		<delete dir="${build}" />
 		<delete dir="${dist}" />
-		<delete>
-			<fileset dir="${src}/info/sansgills/mode/python/preproc" includes="*.java *.tokens" /> <!-- remove generated files -->
-		</delete>
+	</target>
+	
+	<target name="cleangen" >
+		<delete dir="${gen}" />
 	</target>
 	
 </project>

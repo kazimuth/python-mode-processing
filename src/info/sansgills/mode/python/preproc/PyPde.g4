@@ -3,16 +3,109 @@
  * and open the template in the editor.
  */
 
-grammar PyPde2;
+grammar PyPde;
+
+@parser::header {
+                 package info.sansgills.mode.python.preproc;
+                 }
+
+@lexer::header {
+                package info.sansgills.mode.python.preproc;
+                
+                import java.util.Stack;
+                import java.util.Deque;
+                import java.util.ArrayDeque;
+                import java.lang.Integer;
+                import org.antlr.v4.runtime.CommonToken;
+                import org.antlr.v4.runtime.misc.Interval;
+                }
 
 //some black magic
 @lexer::members {
                  int bracket_nesting_level = 0;
                  int parenth_nesting_level = 0;
                  int curlybr_nesting_level = 0;
+                                                   
+                 Stack<Integer> whitespace_stack = new Stack<Integer>();
                  
-                 int previous_indent_level = 0;
-                 int current_indent_level = 0;
+                 Deque<Token> pendingTokens = new ArrayDeque<Token>();
+                 
+                 @Override
+                 public Token nextToken() {
+                        if(whitespace_stack.empty()){
+                               whitespace_stack.push(new Integer(0));
+                        }
+                        
+                        while(pendingTokens.isEmpty()){
+                               Token token = super.nextToken();
+                               switch(token.getType()){
+                               case EOF: //EOF; dedent until we're at the bottom of the stack and then pop off a newline
+                                      System.out.println("EOF");
+                                      if(whitespace_stack.peek().intValue() != 0){
+                                             while(whitespace_stack.peek().intValue() != 0){
+                                                    whitespace_stack.pop();
+                                                    pendingTokens.add(new CommonToken(DEDENT, "DE"));
+                                             }
+                                             pendingTokens.add(new CommonToken(NEWLINE, "\n"));
+                                      }
+                                      pendingTokens.add(new CommonToken(EOF, "<EOF>"));
+                                      break;
+                               case NEWLINE: 
+                                      System.out.println("newline");
+                                      pendingTokens.add(token);
+                                      //dynamically generate *DENT tokens
+                                      int next = 0; //level of indentation on next line
+                                      int current_position = token.getText().length();
+                                      String followingText = _input.getText(new Interval(_tokenStartCharIndex, _tokenStartCharIndex+32));
+                                      boolean empty_line = false;
+                                      while(true){
+                                             if(current_position >= followingText.length()){
+                                                    followingText = _input.getText(new Interval(_tokenStartCharIndex, _tokenStartCharIndex+current_position+32));
+                                                    if(current_position >= followingText.length()){
+                                                           //we've reached the end of the text
+                                                           break;
+                                                    }
+                                             }
+                                             if(followingText.charAt(current_position) == ' '){
+                                                    next++;
+                                             }else if(followingText.charAt(current_position) == '\t'){
+                                                    next+=8;
+                                                    next-=next%8;
+                                             }else if(followingText.charAt(current_position) == '\r' || followingText.charAt(current_position) == '\n'){
+                                                    empty_line = true;
+                                                    break;
+                                             }else{
+                                                    break;
+                                             }
+                                             current_position++;
+                                      }
+                                      if(empty_line){
+                                                     System.out.println("empty line");
+                                                     break;
+                                                     }
+                                      
+                                      //next now matches the amount of whitespace beginning the next line
+                                      int cur = whitespace_stack.peek().intValue();
+                                      System.out.println("next line: "+next+" current line: "+cur);
+                                      if(next > cur){
+                                             whitespace_stack.push(new Integer(next));
+                                             pendingTokens.add(new CommonToken(INDENT, "IN"));
+                                             System.out.println("indenting");
+                                      }else if(next < cur){
+                                             while(next < whitespace_stack.peek().intValue()){
+                                                    whitespace_stack.pop();
+                                                    pendingTokens.add(new CommonToken(DEDENT, "DE"));
+                                                    System.out.println("dedenting");
+                                             }
+                                      }
+                                      break;
+                               default:
+                                      pendingTokens.add(token);
+                                      break;
+                               }
+                        }
+                        return pendingTokens.poll();
+                 }
                  }
 
 
@@ -82,27 +175,31 @@ TRY : 'try';
 
 IDENTIFIER: [a-zA-Z_] [a-zA-Z0-9_]*;
 
+COMMENT: '#' (~'\n')* -> skip; //no need to keep these
+
 //logical vs. physical line nonsense
 LPAREN: '(' {parenth_nesting_level++;};
 RPAREN: ')' {parenth_nesting_level--;};
 LCURLY: '{' {curlybr_nesting_level++;};
 RCURLY: '}' {curlybr_nesting_level--;};
 LBRACKET: '[' {bracket_nesting_level++;};
-RBRACKET: '[' {bracket_nesting_level--;};
+RBRACKET: ']' {bracket_nesting_level--;};
 
 //we're inside a grouping, newlines don't count
 IMPLICIT_ESCAPE_NEWLINE: {parenth_nesting_level > 0 ||
                           curlybr_nesting_level > 0 ||
                           bracket_nesting_level > 0}? ('\n' | '\r\n') -> skip;
-EXPLICIT_ESCAPE_NEWLINE: ('\\\n' | '\\\r\n') -> skip; //explicit line joins
+EXPLICIT_ESCAPE_NEWLINE: '\\' '\r'? '\n' -> skip; //explicit line joins
 
 
-NEWLINE: ('\n' | '\r\n') {current_indent_level = 0;}; //above not true; these newlines count
+NEWLINE: '\r'?'\n'; //above not true; these newlines count
 
-COMMENT: '#' (~'\n')* -> skip; //no need to keep these
+//never generate these automatically
+INDENT: {false}? 'IN';
+DEDENT: {false}? 'DE';
 
+WS: [ \t]+ -> skip;
 
-WS: ' '+ -> skip;
 
 // onto the parser
 // atomic values: identifiers and literals (including enclodure literals
@@ -114,13 +211,13 @@ enclosure :  parenth_form | generator_expression
           | list_display | dict_display | set_display
           | string_conversion | yield_atom;
 
-parenth_form: '(' expression_list ')'; //tuples
-
+parenth_form: '(' expression_list ')'; //tuples 
+ 
 generator_expression: '(' expression comp_for ')';
 
 list_display        :  '[' (expression_list | list_comprehension)? ']'; //lists; lotsa backwards compatibility cruft tho
 list_comprehension  :  expression list_for;
-list_for            :  FOR target_list IN old_expression_list (list_iter)?;
+list_for            :  FOR target_list IN old_expression_list (list_iter)?; 
 old_expression_list :  old_expression ((',' old_expression)+ ','?)?;
 old_expression      :  or_test | old_lambda_form;
 list_iter           :  list_for | list_if;
@@ -128,24 +225,24 @@ list_if             :  IF old_expression list_iter?;
 
 dict_display       :  '{' (key_datum_list | dict_comprehension)? '}'; //dictionary
 key_datum_list     :  key_datum (',' key_datum)* ','?;
-key_datum          :  expression ':' expression;
+key_datum          :  expression ':' expression; 
 dict_comprehension :  expression ':' expression comp_for;
 
 set_display :  '{' (expression_list | comprehension) '}'; //set
 
 comprehension :  expression comp_for; //elements of set and dictionary comprehensions
-comp_for      :  FOR target_list IN or_test comp_iter?;
+comp_for      :  FOR target_list IN or_test comp_iter?; 
 comp_iter     :  comp_for | comp_if;
 comp_if       :  IF expression comp_iter?;
 
 string_conversion :  '`' expression_list '`';
-
+ 
 yield_atom       :  '('  yield_expression ')';
 yield_expression :  YIELD expression_list?;
 
 
 // primaries: most tightly bound operations
-
+ 
 primary : primary '.' identifier # AttributeRef
         | primary '[' expression_list ']' # Subscription
         | primary '[' short_slice ']' # ShortSlicing
@@ -170,13 +267,13 @@ long_slice       :  short_slice ':' (expression)?;
 //call                 :  primary '(' (argument_list ','? | expression comp_for)? ')';
 
 
-argument_list        :  positional_arguments (',' keyword_arguments)?
+argument_list        :  positional_arguments (',' keyword_arguments)? 
                             (',' '*' expression)? (',' keyword_arguments)?
                             (',' '**' expression)?
-                          | keyword_arguments (',' '*' expression)?
+                          | keyword_arguments (',' '*' expression)? 
                             (',' '**' expression)?
                           | '*' expression (',' '*' expression)? (',' '**' expression)?
-                          | '**' expression;
+                          | '**' expression; 
 positional_arguments :  expression (',' expression)*;
 keyword_arguments    :  keyword_item (',' keyword_item)*;
 keyword_item         :  identifier '=' expression;
@@ -302,7 +399,7 @@ compound_stmt:  if_stmt
     | classdef
     | decorated;
 
-suite: stmt_list NEWLINE | NEWLINE INDENT statement+ DEDENT;
+suite: stmt_list NEWLINE | NEWLINE INDENT (statement | NEWLINE)+ DEDENT;
 
 if_stmt:  IF expression ':' suite 
           (ELIF expression ':' suite)* 

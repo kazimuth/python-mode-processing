@@ -2,8 +2,7 @@
 /build/
 /dist/
 /build.number
-/src/info/sansgills/mode/python/preproc/*.java		# generated files
-/src/info/sansgills/mode/python/preproc/*.tokens	# generated files
+/generated/*
 
 # Java things #
 *.class
