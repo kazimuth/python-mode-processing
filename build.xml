@@ -4,7 +4,7 @@
 	<!-- Note: now compiles two separate jars- one for python mode, and one that's a wrapper for the processing core that can run python files -->
 	
 	<!-- You'll want to change these to compile. -->
-	<property name="processing.base" 			location="C:\Dev\processing-2.0.1-windows64\processing-2.0.1" /> 	<!-- The directory that you unpacked Processing into. -->
+	<property name="processing.base" 			location="C:\Dev\processing-2.0.2-windows64\processing-2.0.2" /> 	<!-- The directory that you unpacked Processing into. -->
 	<property name="processing.sketchfolder" 	location="C:\Dev\Processing" />										<!-- Your sketchbook folder. -->
 	<property name="java.target.bootclasspath"	location="C:\Program Files\Java\jdk1.6.0_38\jre\lib\rt.jar" />		<!-- If you're using a newer jdk -->
 	
@@ -72,8 +72,6 @@
 	<target name="generate" depends="get" unless="gen.present">
 		<mkdir dir="${gen}" />
 		<java jar="tool/antlr-4.1-complete.jar" fork="true">
-			<arg value="-no-listener" />
-			<arg value="-visitor" />
 			<arg value="-lib" />
 			<arg value="${basedir}/${src}/${preproc.path}" />
 			<arg value="-o" />
@@ -116,7 +114,7 @@
 		<mkdir dir="${bundle}/mode" />
 		
 		<!-- make mode jar -->
-		<jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build" includes="${lib.path}/*.class"/>
+		<jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build" includes="${lib.path}/*.class ${preproc.path}/*.class"/>
 		<!-- make wrapper jar -->
 		<jar jarfile="${bundle}/mode/${wrap.name}.jar" basedir="build" includes="${wrap.path}/*"/> <!-- include *.py -->
 		
@@ -161,7 +159,7 @@
 		<delete dir="${dist}" />
 	</target>
 	
-	<target name="cleangen" >
+	<target name="cleangen" depends="clean" >
 		<delete dir="${gen}" />
 	</target>
 	

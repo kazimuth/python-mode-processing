@@ -97,7 +97,7 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 	private static Pattern incIndent = Pattern.compile(":( |\\t)*(#.*)?$"); //TODO fix; breaks on strings (":#"\n) and so on
 	
 	String getIndent(int cursor, String text){
-		if(cursor == 1) return "\n";
+		if(cursor <= 1) return "\n";
 		
 		int lineStart, lineEnd;
 		int i;

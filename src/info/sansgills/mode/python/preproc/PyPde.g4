@@ -27,31 +27,32 @@ grammar PyPde;
                  int curlybr_nesting_level = 0;
                                                    
                  Stack<Integer> whitespace_stack = new Stack<Integer>();
+                 {
+                        whitespace_stack.push(new Integer(0));
+                  }
+                 
                  
                  Deque<Token> pendingTokens = new ArrayDeque<Token>();
                  
                  @Override
-                 public Token nextToken() {
-                        if(whitespace_stack.empty()){
-                               whitespace_stack.push(new Integer(0));
-                        }
-                        
+                 public Token nextToken() {                        
                         while(pendingTokens.isEmpty()){
                                Token token = super.nextToken();
                                switch(token.getType()){
                                case EOF: //EOF; dedent until we're at the bottom of the stack and then pop off a newline
-                                      System.out.println("EOF");
+                                      //System.out.println("EOF");
                                       if(whitespace_stack.peek().intValue() != 0){
+                                      		 pendingTokens.add(new CommonToken(NEWLINE, "\n"));
                                              while(whitespace_stack.peek().intValue() != 0){
                                                     whitespace_stack.pop();
-                                                    pendingTokens.add(new CommonToken(DEDENT, "DE"));
+                                                    pendingTokens.add(new CommonToken(DEDENT, ""));
                                              }
                                              pendingTokens.add(new CommonToken(NEWLINE, "\n"));
                                       }
                                       pendingTokens.add(new CommonToken(EOF, "<EOF>"));
                                       break;
                                case NEWLINE: 
-                                      System.out.println("newline");
+                                      //System.out.println("newline");
                                       pendingTokens.add(token);
                                       //dynamically generate *DENT tokens
                                       int next = 0; //level of indentation on next line
@@ -80,22 +81,22 @@ grammar PyPde;
                                              current_position++;
                                       }
                                       if(empty_line){
-                                                     System.out.println("empty line");
+                                                     //System.out.println("empty line");
                                                      break;
                                                      }
                                       
                                       //next now matches the amount of whitespace beginning the next line
                                       int cur = whitespace_stack.peek().intValue();
-                                      System.out.println("next line: "+next+" current line: "+cur);
+                                      //System.out.println("next line: "+next+" current line: "+cur);
                                       if(next > cur){
                                              whitespace_stack.push(new Integer(next));
-                                             pendingTokens.add(new CommonToken(INDENT, "IN"));
-                                             System.out.println("indenting");
+                                             pendingTokens.add(new CommonToken(INDENT, ""));
+                                             //System.out.println("indenting");
                                       }else if(next < cur){
                                              while(next < whitespace_stack.peek().intValue()){
                                                     whitespace_stack.pop();
-                                                    pendingTokens.add(new CommonToken(DEDENT, "DE"));
-                                                    System.out.println("dedenting");
+                                                    pendingTokens.add(new CommonToken(DEDENT, ""));
+                                                    //System.out.println("dedenting");
                                              }
                                       }
                                       break;
@@ -198,7 +199,7 @@ NEWLINE: '\r'?'\n'; //above not true; these newlines count
 INDENT: {false}? 'IN';
 DEDENT: {false}? 'DE';
 
-WS: [ \t]+ -> skip;
+WS: [ \t]+ -> channel(HIDDEN);
 
 
 // onto the parser
@@ -237,7 +238,7 @@ comp_if       :  IF expression comp_iter?;
 
 string_conversion :  '`' expression_list '`';
  
-yield_atom       :  '('  yield_expression ')';
+yield_atom       :  '(' yield_expression ')';
 yield_expression :  YIELD expression_list?;
 
 
@@ -251,20 +252,12 @@ primary : primary '.' identifier # AttributeRef
         | atom # PrimaryAtom
         ;
 
-//attributeref :  primary '.' identifier;
-
-//subscription :  primary '[' expression_list ']'; //BLAH
-
-//slicing          :  simple_slicing | extended_slicing;
-//simple_slicing   :  primary '[' short_slice ']';
-//extended_slicing :  primary '[' slice_list ']';
 slice_list       :  slice_item (',' slice_item)* ','?;
 slice_item       :  expression | proper_slice | '...';
 proper_slice     :  short_slice | long_slice;
 short_slice      :  (expression)? ':' (expression)?;
 long_slice       :  short_slice ':' (expression)?;
 
-//call                 :  primary '(' (argument_list ','? | expression comp_for)? ')';
 
 
 argument_list        :  positional_arguments (',' keyword_arguments)? 
@@ -335,9 +328,6 @@ target:  identifier #TargetIdentifier //essentially a primary, but without atoms
       | target '[' short_slice ']' #TargetShortSlicing
       | target '[' slice_list ']' # TargetLongSlicing
       ;
-//      | attributeref
-//      | subscription
-//      | slicing ;
 
 augmented_assignment_stmt:  augtarget augop (expression_list | yield_expression);
 augtarget:  identifier # AugTargetIdentifier
@@ -399,7 +389,9 @@ compound_stmt:  if_stmt
     | classdef
     | decorated;
 
-suite: stmt_list NEWLINE | NEWLINE INDENT (statement | NEWLINE)+ DEDENT;
+suite: stmt_list NEWLINE #SimpleSuite
+	 | NEWLINE INDENT (statement | NEWLINE)+ DEDENT #ComplexSuite
+	 ;
 
 if_stmt:  IF expression ':' suite 
           (ELIF expression ':' suite)* 
@@ -421,7 +413,7 @@ try_stmt:  ((TRY ':' suite
 with_stmt:  WITH with_item (',' with_item)* ':' suite;
 with_item:  expression (AS target)?;
 
-funcdef:  DEF identifier '(' parameter_list ')' ':' suite;
+funcdef:  DEF identifier '(' parameter_list? ')' ':' suite;
 parameter_list:  (defparameter ',')*
                  ('*' identifier (',' '**' identifier)?
                  |'**' identifier
@@ -429,7 +421,7 @@ parameter_list:  (defparameter ',')*
 defparameter:  parameter ('=' expression)?;
 parameter:  identifier | '(' parameter (',' parameter)* ','? ')'; //sublist
 
-classdef:  CLASS identifier ('(' expression_list ')')? ':' suite;
+classdef:  CLASS identifier ('(' expression_list? ')')? ':' suite;
 
 decorated: decorator+ (classdef | funcdef);
 decorator:  '@' identifier ('.' identifier)*  ('(' (argument_list ','? )? ')')? NEWLINE;

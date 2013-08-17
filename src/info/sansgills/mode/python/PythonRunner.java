@@ -19,11 +19,10 @@ import processing.core.PApplet;
  */
 
 public class PythonRunner {
-	PythonBuild build;				// the python source we're working with
 	PythonEditor editor;			// our editor (TODO command line?)
 	
 	Process sketchProcess;			// the process we create
-
+	
 	// Threads to redirect output / error streams from process to us
 	Communicator communicator;
 	
@@ -50,9 +49,10 @@ public class PythonRunner {
 	 * Run the code.
 	 */
 	public void launch(PythonBuild build, boolean present) {
-		this.build = build;
 		ensureParallel();
-		communicator.sendSketch(buildSketchArgs(present));
+		String[] a = buildSketchArgs(build, present);
+		System.out.println(a);
+		communicator.sendSketch(a);
 	}
 
 	/*
@@ -70,10 +70,6 @@ public class PythonRunner {
 	 */
 	private void ensureParallel(){
 		if(sketchProcess == null){
-			if(build == null){
-				System.err.println("need a build");
-				return;
-			}
 			sketchProcess = PApplet.exec(buildJavaArgs());
 			communicator = new Communicator(sketchProcess, this);
 		}
@@ -96,7 +92,7 @@ public class PythonRunner {
 			System.err.println("something is very wrong");
 		}
 	}
-	
+
 	/*
 	 * Command to start the companion process
 	 */
@@ -139,17 +135,13 @@ public class PythonRunner {
 
 		// Pretty app name on OS X
 		if (Base.isMacOS()) {
-			args.add("-Xdock:name=" + build.getClassName());
+			args.add("-Xdock:name=Processing"); //TODO change name each run?
 		}
 
-		// Path to the libraryies we use
-		// TODO what's the difference between classpath and library path?
-		args.add("-Djava.library.path=" + build.getJavaLibraryPath()
-				+ File.pathSeparator + System.getProperty("java.library.path"));
-		
-		// Manage Python Mode
+		//library path (for native things, etc.) and classpath
+		args.add("-Djava.library.path="+buildJavaLibraryPath());		
 		args.add("-cp");
-		args.add(build.getClassPath());
+		args.add(buildClassPath());
 
 		args.add("info.sansgills.mode.python.wrapper.ProcessingJythonWrapper"); // main class
 		
@@ -163,11 +155,15 @@ public class PythonRunner {
 	/*
 	 * Arguments for individual sketches
 	 */
-	private String[] buildSketchArgs(boolean present) {
+	private String[] buildSketchArgs(PythonBuild build, boolean present) {
 		ArrayList<String> args = new ArrayList<String>();
 
 		args.add("--script="+build.getResultFile()); // path to script
-
+		
+		//the wrapper will dynamically inject these if it hasn't already
+		if(build.hasJavaLibraries()) args.add("--javalibs="+build.getJavaLibraries());
+		if(build.hasPythonLibraries()) args.add("--pylibs="+build.getPythonLibraries());
+		
 		// tell PApplet where the editor is and let it sort itself out
 		Point editorLocation = editor.getLocation();
 		args.add(PApplet.ARGS_EDITOR_LOCATION + "=" + editorLocation.x + ","
@@ -181,8 +177,47 @@ public class PythonRunner {
 					+ Preferences.get("run.present.bgcolor"));
 		}
 
-		args.add(build.getClassName()); // sketch name MUST BE LAST
+		args.add(build.getName()); // sketch name MUST BE LAST
 
 		return args.toArray(new String[0]);
+	}
+	
+	
+	/*
+	 * Moving this here from PythonBuild because it's generic (i.e. not build-dependent)
+	 * We can send new libraries dynamically, as builds demand them
+	 */
+	private String buildClassPath(){
+		// the Processing classpath
+		String classPath = editor.getMode().getCoreLibrary().getClassPath();
+
+		// From JavaMode.java:
+		// Finally, add the regular Java CLASSPATH. This contains everything
+		// imported by the PDE itself (core.jar, pde.jar, quaqua.jar) which may
+		// in fact be more of a problem.
+		String javaClassPath = System.getProperty("java.class.path");
+		// Remove quotes if any.. A messy (and frequent) Windows problem
+		if (javaClassPath.startsWith("\"") && javaClassPath.endsWith("\"")) {
+			javaClassPath = javaClassPath.substring(1,
+					javaClassPath.length() - 1);
+		}
+		classPath += File.pathSeparator + javaClassPath;
+
+		// The .jars for this mode; Jython and wrapper
+		String jythonModeLib = Base.getSketchbookModesFolder()
+				.getAbsolutePath()
+				+ File.separator
+				+ "PythonMode"
+				+ File.separator + "mode";
+		classPath += Base.contentsToClassPath(new File(jythonModeLib));
+		
+		return classPath;
+	}
+	
+	/*
+	 * TODO figure out if I need anything else here
+	 */
+	private String buildJavaLibraryPath(){
+		return System.getProperty("java.library.path");
 	}
 }

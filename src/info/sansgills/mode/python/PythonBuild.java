@@ -2,6 +2,7 @@ package info.sansgills.mode.python;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,18 +11,26 @@ import processing.app.Library;
 import processing.app.Sketch;
 import processing.app.SketchCode;
 
+import info.sansgills.mode.python.preproc.*;
+
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
+
+
 
 /**
  * 
  * Class to handle the building of python files.
- * Given that python runs as an interpreter, all this does is handle preprocessing.
+ * Given that python runs as an interpreter, all this does is handle preprocessing
+ * and write to an output file.
  * 
  * See BUILD.md for notes.
  * 
  */
 
 public class PythonBuild {
-	
 	Sketch sketch;
 	String resultProgram;
 	
@@ -29,6 +38,8 @@ public class PythonBuild {
 	
 	File binFolder;
 	File outFile;
+	
+	String classPath, pythonLibs, javaLibs;
 	
 	//build tracking
 	private int buildnumber;
@@ -69,7 +80,7 @@ public class PythonBuild {
 				+ sketch.getName().toLowerCase()
 				+ ".py");
 		outFile.createNewFile();
-	
+		
 		
 		PrintWriter writer = new PrintWriter(outFile);
 		writer.print(resultProgram);
@@ -77,54 +88,52 @@ public class PythonBuild {
 	}
 	
 	
-	
-	//Things we don't need to reload every build
-	//Some regexes
-	//A hack, but much less work than a full parser, and we don't need to do very much
-	private static Pattern getSpecial;		//replace mousePressed / keyPressed /frameRate with getmousePressed, etc.
-	private static Pattern instanceVars;	//replace 'mouseX' with __applet__.mouseX, etc.
-	private static Pattern findSetup, indent;	//for static-mode sketches
-	
-	static{
-		getSpecial = Pattern.compile("(?<!def\\s{1,1000})(mousePressed|keyPressed|frameRate)(?![0-9a-zA-Z_])(?!\\s{0,1000}\\()");
-		instanceVars = Pattern.compile("(mouseX|mouseY|pmouseX|pmouseY|mouseButton|"
-				+"keyCode|key|pixels|width|height|displayWidth|displayHeight|focused|frameCount)(?![0-9a-zA-Z_])");
-		findSetup = Pattern.compile("^def\\s+setup\\s*\\(\\s*\\)\\s*:", Pattern.MULTILINE);
-		indent = Pattern.compile("\r?\n");		
-	}
-	
-	
-	
 	/*
 	 * Turn .pde into valid python
+	 * 
+	 * Now with antlr!
 	 */
 	private String preprocess(StringBuilder program){
+		if(Pattern.matches("\\s*", program)){
+			return "def setup():\n\tpass\n\n"; //empty sketch; TODO fix hack
+		}
 		try{
-			String temp;
+			PyPdeLexer lexer = new PyPdeLexer(new ANTLRInputStream(program.toString()));
+			CommonTokenStream tokens = new CommonTokenStream(lexer);
+			PyPdeParser parser = new PyPdeParser(tokens);
+			ParseTree tree = parser.script();
+			PyPdeConverter converter = new PyPdeConverter(tokens);
+			ParseTreeWalker walker = new ParseTreeWalker();
+			walker.walk(converter, tree);
 			
-			Matcher regex = getSpecial.matcher(program);
+			String result = converter.getText();
 			
-			temp = regex.replaceAll("get$1()");
+			String[] libraries = converter.getLibraries();
 			
-			regex = instanceVars.matcher(temp);
+			Set<String> knownPythonLibraries = PythonMode.getPythonLibraries();
 			
-			temp = regex.replaceAll("__applet__.$1");
+			pythonLibs = "";
+			javaLibs = "";
 			
-			regex = findSetup.matcher(temp);
-			
-			if(!regex.find()){
-				//no setup function; static mode sketch
-				//TODO handle bad indentation
-				program = new StringBuilder(temp);
-				program.append("\nnoLoop()\n");			//no need to call draw()
-				program.insert(0, "def setup():\n");	//put the whole function in setup()
-				
-				regex = indent.matcher(program);
-				
-				temp = regex.replaceAll("\n\t");		//indent everything a level! (except the first line)
+			for(String lib : libraries){
+				if(knownPythonLibraries.contains(lib)){
+					//it's a python library; for now, I'm only handling ones built into jython, so no need to do anything
+				}else{
+					//normal java library; we can use the normal library infrastructure
+					int dot = lib.lastIndexOf('.');
+				    String entry = (dot == -1) ? lib : lib.substring(0, dot);
+				    Library library = mode.getLibrary(entry);
+				    javaLibs += library.getJarPath() + System.getProperty("path.separator");
+				}
 			}
 			
-			return temp;
+			if(pythonLibs.equals("")){
+				pythonLibs = null;
+			}
+			if(javaLibs.equals("")){
+				javaLibs = null;
+			}
+			return result;
 			
 		}catch(Exception e){
 			System.err.println("Preprocessing failed.");
@@ -133,13 +142,20 @@ public class PythonBuild {
 		}
 	}
 	
+	public String getJavaLibraries(){
+		return javaLibs;
+	}
+	public boolean hasJavaLibraries(){
+		return javaLibs != null;
+	}
 	
 	
-	
-	
-	
-	
-	
+	public String getPythonLibraries(){
+		return pythonLibs;
+	}
+	public boolean hasPythonLibraries(){
+		return pythonLibs != null;
+	}
 	
 	/*
 	 * The output code string
@@ -164,35 +180,13 @@ public class PythonBuild {
 	
 	/*
 	 * Classes used to run the build.
-	 * 
-	 * TODO build during preprocess
 	 */
 	public String getClassPath() {
-		//the Processing classpath
-		String cp = mode.getCoreLibrary().getClassPath();
-		
-		// From JavaMode.java:
-		// Finally, add the regular Java CLASSPATH. This contains everything
-		// imported by the PDE itself (core.jar, pde.jar, quaqua.jar) which may
-		// in fact be more of a problem.
-		String javaClassPath = System.getProperty("java.class.path");
-		// Remove quotes if any.. A messy (and frequent) Windows problem
-		if (javaClassPath.startsWith("\"") && javaClassPath.endsWith("\"")) {
-			javaClassPath = javaClassPath.substring(1,
-					javaClassPath.length() - 1);
-		}
-		cp += File.pathSeparator + javaClassPath;
-		
-		//The .jars for this mode; Jython and wrapper, primarily
-		String jythonModeLib = Base.getSketchbookModesFolder().getAbsolutePath()
-				+ File.separator
-				+ "PythonMode"
-				+ File.separator
-				+ "mode";
-		cp += Base.contentsToClassPath(new File(jythonModeLib));
-		
-		
-		return cp; // TODO libraries?
+		return classPath; //computed during preprocessing
+	}
+	
+	public String getName() {
+		return sketch.getName();
 	}
 	
 	/*
@@ -200,19 +194,5 @@ public class PythonBuild {
 	 */
 	public String getJavaLibraryPath(){
 		return "";
-	}
-	
-	/*
-	 * The PApplet subclass to extract from the code
-	 */
-	public String getClassName(){
-		return "Placeholder";		//TODO implement naming scheme
-	}
-	
-	/*
-	 * The name of the output object
-	 */
-	public String getObjName(){
-		return "applet";			// TODO
 	}
 }

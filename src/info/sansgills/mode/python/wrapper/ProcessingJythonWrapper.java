@@ -20,7 +20,9 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 import org.python.core.*;
 import org.python.util.InteractiveConsole;
@@ -61,18 +63,20 @@ public class ProcessingJythonWrapper {
 	static PythonPApplet applet;	// Applet we pull from the interpreter
 	
 	static final String objname = "__applet__";
+	static final String separator = System.getProperty("path.separator");
 	
+	static Set<String> javaLibraries = new HashSet<String>();
+	static Set<String> pythonLibraries = new HashSet<String>();
+
 	static boolean parallel;
-	static boolean ready;
+	static boolean ready = false;
 	
 	/*
 	 * Starting up our process; either it's running in parallel with an editor,
 	 * in which case we get ready to connect and pass messages, or it's not, in
 	 * which case this is a one-shot job and nobody's listening
 	 */
-	public static void main(String[] args) {
-		ready = false;
-		
+	public static void main(String[] args) {		
 		// the PDE will have this as the only arument if we're running paired
 		parallel = args[0].indexOf("--parallel") != -1;
 		
@@ -80,7 +84,6 @@ public class ProcessingJythonWrapper {
 			receiver = new MessageReceiverThread(System.in);
 			receiver.start();
 			prepare();
-			ready = true;
 		} else {		//on our own
 			prepare();
 			runSketch(args);
@@ -106,8 +109,12 @@ public class ProcessingJythonWrapper {
 		sys = Py.getSystemState(); // python 'sys' variable
 		
 		PySystemState.add_package("info.sansgills.mode.python.wrapper");
-		PySystemState.add_package("processing.core");
-		PySystemState.add_package("processing.opengl");
+		//PySystemState.add_package("processing.core");
+		//PySystemState.add_package("processing.opengl");
+		//PySystemState.add_package("processing.event");
+		//PySystemState.add_package("processing.data");
+		
+		ready = true;
 	}
 	
 	public static void startSketch(String[] args){
@@ -120,10 +127,17 @@ public class ProcessingJythonWrapper {
 				}catch(InterruptedException e){}
 			}
 		}
-		//applet is now null
-		//python context is scrubbed
-		//we're good to go, hopefully
 		
+		while (!ready) {
+			try {
+				Thread.sleep(50);
+			} catch (Exception e){}
+		}
+		
+		//applet is now null
+		//python context is up and running
+		//we're good to go, hopefully
+				
 		runSketch(args);
 		
 	}
@@ -133,11 +147,6 @@ public class ProcessingJythonWrapper {
 	 * 
 	 */
 	public static void constructApplet(String scriptPath){
-		while (!ready) {
-			try {
-				Thread.sleep(50);
-			} catch (Exception e){}
-		}
 		try {
 			// run prepend.py
 			interp.exec(prepend);
@@ -268,9 +277,30 @@ public class ProcessingJythonWrapper {
 				} else if (param.equals(PythonPApplet.ARGS_SKETCH_FOLDER)) {
 					folder = value;
 				} else if (param.equals(PythonPApplet.ARGS_LOCATION)) {
-					location = PythonPApplet.parseInt(PythonPApplet.split(value, ','));
-				} else if (param.equals(PythonPApplet.ARGS_SCRIPT)) {
+					location = PythonPApplet.parseInt(PythonPApplet.split(
+							value, ','));
+				} else if (param.equals("--script")) {
 					scriptPath = value;
+				} else if (param.equals("--pylibs")) {
+					if (value != null) {
+						System.out.println(sys.path);
+						for (String lib : value.split(separator)) {
+							if (!pythonLibraries.contains(lib)) {
+								pythonLibraries.add(lib);
+								sys.path.append(new PyString(lib));
+							}
+						}
+					}
+				} else if (param.equals("--javalibs")) {
+					if (value != null) {
+						for (String lib : value.split(separator)) {
+							System.out.println(sys.path);
+							if (!javaLibraries.contains(lib)) {
+								javaLibraries.add(lib);
+								sys.path.append(new PyString(lib));
+							}
+						}
+					}
 				}
 
 			} else {

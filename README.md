@@ -16,13 +16,12 @@ Check build.xml for building instructions.
 Done:
 - Basic functionality- running python code
 - Basic indentation & highlighting
-- Basic preprocessor
+- Preprocessor
 
 Currently working on:
-- Proper parser for the preprocessor
+- Library imports and sketch exports
 
 Future work:
-- Library imports and sketch exports
 - Better autoindent & syntax highlighting
 - REPL for live coding
 

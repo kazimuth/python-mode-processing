@@ -18,10 +18,7 @@ import org.python.core.*;
  *
  */
 
-public class PythonPApplet extends PApplet {
-	
-	static final String ARGS_SCRIPT = "--script";
-	
+public class PythonPApplet extends PApplet {	
 	//Accessed from prepend.py
 	public static final String[] staticMethods = { "abs", "acos", "append",
 			"arrayCopy", "asin", "atan", "atan2", "binary", "blendColor",
@@ -96,7 +93,10 @@ public class PythonPApplet extends PApplet {
 			if(e.getCause() instanceof RendererChangeException){
 				// Processing uses this to signal a change in renderer
 				// chuck it up the stack
+				System.out.println("renderer changing");
 				throw (RendererChangeException) e.getCause();
+			}else{
+				throw e;
 			}
 		}
 	}
