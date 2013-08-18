@@ -169,11 +169,14 @@ public class PythonPApplet extends PApplet {
 	@Override
 	public void dispose(){
 		if (!disposed) {
+			System.out.println("disposing sketch");
 			disposed = true;
 			super.dispose();
 			frame.dispose();
 
 			ProcessingJythonWrapper.sketchDisposed();
+			
+			System.out.println("done disposing");
 		}
 	}
 	

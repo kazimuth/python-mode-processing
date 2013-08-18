@@ -109,6 +109,7 @@ public class PythonEditor extends Editor {
 	        handleStop();
 	      }
 	    });
+	    
 	    return buildSketchMenu(new JMenuItem[] { runItem, presentItem, stopItem });
 	}
 

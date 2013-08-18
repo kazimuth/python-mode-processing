@@ -41,6 +41,8 @@ public class PythonBuild {
 	
 	String classPath, pythonLibs, javaLibs;
 	
+	boolean usesOpenGL;
+	
 	//build tracking
 	private int buildnumber;
 	private static int buildstotal = 0;
@@ -88,13 +90,14 @@ public class PythonBuild {
 	}
 	
 	
+	private static Pattern whitespace = Pattern.compile("\\s*");
 	/*
 	 * Turn .pde into valid python
 	 * 
 	 * Now with antlr!
 	 */
 	private String preprocess(StringBuilder program){
-		if(Pattern.matches("\\s*", program)){
+		if(whitespace.matcher(program).matches()){
 			return "def setup():\n\tpass\n\n"; //empty sketch; TODO fix hack
 		}
 		try{
@@ -109,6 +112,8 @@ public class PythonBuild {
 			String result = converter.getText();
 			
 			String[] libraries = converter.getLibraries();
+			
+			usesOpenGL = converter.usesOpenGL;
 			
 			Set<String> knownPythonLibraries = PythonMode.getPythonLibraries();
 			

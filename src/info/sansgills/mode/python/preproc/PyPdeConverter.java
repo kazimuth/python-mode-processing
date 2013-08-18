@@ -33,6 +33,7 @@ public class PyPdeConverter extends PyPdeBaseListener {
 	
 	boolean hasIssues = false;
 	boolean staticMode = true;
+	public boolean usesOpenGL = false;
 	
 	String result;
 	
@@ -65,15 +66,16 @@ public class PyPdeConverter extends PyPdeBaseListener {
 	//fiddle with certain PApplet variables
 	//TODO yell at the user when they try to assign to things
 	@Override
-	public void enterPrimaryAtom(PyPdeParser.PrimaryAtomContext ctx){
-		PyPdeParser.IdentifierContext id = ctx.atom().identifier();
+	public void enterAtom(PyPdeParser.AtomContext ctx){
+		PyPdeParser.IdentifierContext id = ctx.identifier();
 		if(id != null){
+			String text = id.getText();
 			//hopefully this will work without java string nonsense
-			if(instanceVars.contains(id.getText())){
+			if(instanceVars.contains(text)){
 				//one of our instance variables;
 				//replace mouseX with __applet__.mouseX, etc.
 				rewriter.insertBefore(id.IDENTIFIER().getSymbol(), "__applet__."); //woo dirty hacks!
-			}else if(wonkyVars.contains(id.getText())){
+			}else if(wonkyVars.contains(text)){
 				//one of the obnoxious variables with name conflicts
 				//replace mousePressed with getmousePressed()
 				//can't do __applet__.mousePressed Jython thinks that refers to the function
@@ -81,6 +83,21 @@ public class PyPdeConverter extends PyPdeBaseListener {
 				rewriter.insertAfter(id.IDENTIFIER().getSymbol(), "()");
 			}
 		}
+	}
+	
+	private static Pattern getArgs = Pattern.compile("OPENGL|P3D|P2D");
+	@Override
+	public void enterCall(PyPdeParser.CallContext ctx) {
+		if (ctx.primary() instanceof PyPdeParser.PrimaryAtomContext) {
+			System.out.println("found a funcall");
+			if (ctx.primary().getText().equals("size")) {
+				System.out.println("found size");
+				if(getArgs.matcher(ctx.getText()).find()){
+					usesOpenGL = true;
+				}
+			}
+		}
+
 	}
 	
 	

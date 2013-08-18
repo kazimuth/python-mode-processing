@@ -117,6 +117,16 @@ public class ProcessingJythonWrapper {
 		ready = true;
 	}
 	
+	public static void sendStarted(){
+		System.err.println("__STARTED__");
+		System.out.println("started sent");
+	}
+	public static void sendStopped(){
+		System.err.println("__STOPPED__");
+		System.out.println("stopped sent");
+	}
+	
+	
 	public static void startSketch(String[] args){
 		if(applet != null){
 			applet.exit();
@@ -139,7 +149,6 @@ public class ProcessingJythonWrapper {
 		//we're good to go, hopefully
 				
 		runSketch(args);
-		
 	}
 	
 	
@@ -200,6 +209,7 @@ public class ProcessingJythonWrapper {
 	public static void sketchDisposed(){
 		scrubContext();
 		applet = null; //all done
+		sendStopped(); //signal the mothership
 	}
 	
 	
@@ -283,7 +293,6 @@ public class ProcessingJythonWrapper {
 					scriptPath = value;
 				} else if (param.equals("--pylibs")) {
 					if (value != null) {
-						System.out.println(sys.path);
 						for (String lib : value.split(separator)) {
 							if (!pythonLibraries.contains(lib)) {
 								pythonLibraries.add(lib);
@@ -294,7 +303,6 @@ public class ProcessingJythonWrapper {
 				} else if (param.equals("--javalibs")) {
 					if (value != null) {
 						for (String lib : value.split(separator)) {
-							System.out.println(sys.path);
 							if (!javaLibraries.contains(lib)) {
 								javaLibraries.add(lib);
 								sys.path.append(new PyString(lib));
@@ -522,6 +530,7 @@ public class ProcessingJythonWrapper {
 				frame.setVisible(true);
 			}
 		}
+		sendStarted(); //signal the mothership
 	}
 	
 	/*

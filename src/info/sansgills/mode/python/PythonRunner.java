@@ -26,15 +26,17 @@ public class PythonRunner {
 	// Threads to redirect output / error streams from process to us
 	Communicator communicator;
 	
-	boolean active;
+	boolean dying, needsReboot;
 	
 	public PythonRunner(PythonEditor editor) {
 		this.editor = editor;
-		active = false;
+		dying = false;
+		
 		
 		//make sure our partner process is dead
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			public void run() {
+				dying = true; //don't try to start again
 				if (communicator != null) {
 					communicator.destroy();
 				}
@@ -49,6 +51,8 @@ public class PythonRunner {
 	 * Run the code.
 	 */
 	public void launch(PythonBuild build, boolean present) {
+		needsReboot = build.usesOpenGL;
+		System.out.println("we need to reboot: "+needsReboot);
 		ensureParallel();
 		String[] a = buildSketchArgs(build, present);
 		System.out.println(a);
@@ -61,9 +65,31 @@ public class PythonRunner {
 	public void internalClose() {
 		//Closed from editor button
 		ensureParallel();
-		System.out.println("Closing...");
 		communicator.sendClose();
 	}
+	
+	
+	
+	/*
+	 * Sketch process died; get ready to reboot it
+	 */
+	private void prepareReboot(){
+		System.out.println("rebooting");
+		if(!dying){
+			sketchProcess = null;
+			communicator.destroy();
+			communicator = null;
+		}
+	}
+	
+	/*
+	 * Force sketch process to restart
+	 */
+	public void forceReboot(){
+		System.out.println("Forcing reboot.");
+		if(sketchProcess != null) sketchProcess.destroy();
+	}
+	
 	
 	/*
 	 * Make sure we've got a process to run the code.
@@ -72,25 +98,30 @@ public class PythonRunner {
 		if(sketchProcess == null){
 			sketchProcess = PApplet.exec(buildJavaArgs());
 			communicator = new Communicator(sketchProcess, this);
+			new Thread(new Runnable(){
+				public void run(){
+					try{
+						int result = sketchProcess.waitFor();
+						System.out.println("parallel process killed");
+						prepareReboot();
+					}catch(InterruptedException e){
+						System.err.println("someone interrupted the deathwatch thread");
+					}
+				}
+			}).start();
 		}
 	}
 	
-	
+	/*
+	 * Handle talking to companion process
+	 */
 	public void parallelStopped() {
-		//Closed from sketch window
-		if(active){
-			active = false;
-			System.out.println("Closed");
-		}else{
-			System.err.println("something is wrong");
+		if(needsReboot){
+			forceReboot();
 		}
 	}
 	public void parallelStarted(){
-		if(!active){
-			active = true;
-		}else{
-			System.err.println("something is very wrong");
-		}
+		
 	}
 
 	/*

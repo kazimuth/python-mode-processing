@@ -1,7 +1,7 @@
 Processing Python Mode
 ----------------------
 
-[Processing](http://www.processing.org/) is awesome! [Jython](http://www.jython.org/) is awesome! Together, they are TOTALLY AWESOME!
+[Processing](http://www.processing.org/) is awesome! [Jython](http://www.jython.org/) is awesome! Together, they are very awesome!
 
 This project uses Processing 2.0's mode infrastructure to create a seamless blend of Processing and python.
 

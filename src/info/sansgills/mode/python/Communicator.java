@@ -54,7 +54,6 @@ public class Communicator {
 	 */
 	public void sendClose(){
 		toSketch.println("__STOP__"); //hard-coded, what the hell
-		System.out.println("__STOP__");
 		toSketch.flush();
 	}
 	
@@ -69,7 +68,6 @@ public class Communicator {
 		
 		
 		toSketch.println(out.toString());
-		System.out.println(out.toString());
 		toSketch.flush();
 	}
 	
@@ -91,18 +89,24 @@ public class Communicator {
 				String currentLine;
 
 				// continually read messages
-				while ((currentLine = messageReader.readLine()) != null && running) {
+				while ((currentLine = messageReader.readLine()) != null) {
+					if(!running){
+						System.out.println("Messenger thread no longer running");
+						return;
+					}
 					if (currentLine.indexOf("__STOPPED__") != -1) {
 						// sketch telling us it stopped
 						runner.parallelStopped();
+						System.out.println("Stopped recieved.");
 						return;
 					}else if(currentLine.indexOf("__STARTED__") != -1){
 						runner.parallelStarted();
+						System.out.println("Started recieved.");
 					} else{
 						System.err.println(currentLine);
 					}
 				}
-			} catch (Exception e) {}
+			} catch (Exception e) {e.printStackTrace();}
 		}
 	}
 }
