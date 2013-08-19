@@ -1,13 +1,14 @@
 package info.sansgills.mode.python;
 
-import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
+import java.util.Timer;
+
 import processing.app.exec.StreamRedirectThread;
-import processing.core.PApplet;
+
 
 /**
  * 
@@ -24,6 +25,8 @@ public class Communicator {
 	private MessageReceiverThread errThread;
 	
 	private PrintWriter toSketch;
+	
+	private Timer sketchHanging; //TODO
 	
 	public Communicator (Process sketchProcess, PythonRunner runner){
 		this.sketchProcess = sketchProcess;
@@ -45,9 +48,6 @@ public class Communicator {
 		toSketch.close();
 		toSketch = null;
 	}
-	
-	
-	// communication methods
 	
 	/*
 	 * Tell sketch to close
@@ -83,30 +83,23 @@ public class Communicator {
 			this.runner = runner;
 			this.running = true;
 		}
-		
+
 		public void run() {
 			try {
 				String currentLine;
-
 				// continually read messages
-				while ((currentLine = messageReader.readLine()) != null) {
-					if(!running){
-						System.out.println("Messenger thread no longer running");
-						return;
-					}
+				while ((currentLine = messageReader.readLine()) != null && running) {
 					if (currentLine.indexOf("__STOPPED__") != -1) {
-						// sketch telling us it stopped
 						runner.parallelStopped();
-						System.out.println("Stopped recieved.");
-						return;
-					}else if(currentLine.indexOf("__STARTED__") != -1){
+					} else if (currentLine.indexOf("__STARTED__") != -1) {
 						runner.parallelStarted();
-						System.out.println("Started recieved.");
-					} else{
+					} else {
 						System.err.println(currentLine);
 					}
 				}
-			} catch (Exception e) {e.printStackTrace();}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

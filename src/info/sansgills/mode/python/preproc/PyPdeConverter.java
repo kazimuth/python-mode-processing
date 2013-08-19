@@ -20,7 +20,7 @@ public class PyPdeConverter extends PyPdeBaseListener {
 			"width","height","displayWidth","displayHeight","focused","frameCount"
 	}));
 	static final Set<String> wonkyVars = new HashSet<String>(Arrays.asList(new String[]{
-			"mousePressed", "keyPressed", "frameRate"
+			"mousePressed", "keyPressed"
 	}));
 	
 	TokenStream tokens;
@@ -81,6 +81,26 @@ public class PyPdeConverter extends PyPdeBaseListener {
 				//can't do __applet__.mousePressed Jython thinks that refers to the function
 				rewriter.insertBefore(id.IDENTIFIER().getSymbol(), "get");
 				rewriter.insertAfter(id.IDENTIFIER().getSymbol(), "()");
+			}else if(text.equals("frameRate")){ 
+				//special handling; if it's a call, use it as frameRate()
+				//if it's not, use it as a call to getframeRate()
+				boolean isCall;
+				for(int i = id.start.getTokenIndex(); ; i++){
+					int type = tokens.get(i+1).getType();
+					if(type == PyPdeParser.LPAREN){
+						isCall = true;
+						break;
+					}else if(type == PyPdeParser.WS){
+						continue;
+					}else{
+						isCall = false;
+						break;
+					}
+				}
+				if(!isCall){
+					rewriter.insertBefore(id.IDENTIFIER().getSymbol(), "get");
+					rewriter.insertAfter(id.IDENTIFIER().getSymbol(), "()");
+				}
 			}
 		}
 	}
@@ -89,9 +109,7 @@ public class PyPdeConverter extends PyPdeBaseListener {
 	@Override
 	public void enterCall(PyPdeParser.CallContext ctx) {
 		if (ctx.primary() instanceof PyPdeParser.PrimaryAtomContext) {
-			System.out.println("found a funcall");
 			if (ctx.primary().getText().equals("size")) {
-				System.out.println("found size");
 				if(getArgs.matcher(ctx.getText()).find()){
 					usesOpenGL = true;
 				}

@@ -101,6 +101,7 @@ public class PythonBuild {
 			return "def setup():\n\tpass\n\n"; //empty sketch; TODO fix hack
 		}
 		try{
+			program.append("\n"); //to be safe
 			PyPdeLexer lexer = new PyPdeLexer(new ANTLRInputStream(program.toString()));
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			PyPdeParser parser = new PyPdeParser(tokens);

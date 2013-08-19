@@ -52,10 +52,8 @@ public class PythonRunner {
 	 */
 	public void launch(PythonBuild build, boolean present) {
 		needsReboot = build.usesOpenGL;
-		System.out.println("we need to reboot: "+needsReboot);
 		ensureParallel();
 		String[] a = buildSketchArgs(build, present);
-		System.out.println(a);
 		communicator.sendSketch(a);
 	}
 
@@ -74,7 +72,6 @@ public class PythonRunner {
 	 * Sketch process died; get ready to reboot it
 	 */
 	private void prepareReboot(){
-		System.out.println("rebooting");
 		if(!dying){
 			sketchProcess = null;
 			communicator.destroy();
@@ -86,7 +83,6 @@ public class PythonRunner {
 	 * Force sketch process to restart
 	 */
 	public void forceReboot(){
-		System.out.println("Forcing reboot.");
 		if(sketchProcess != null) sketchProcess.destroy();
 	}
 	
@@ -102,7 +98,7 @@ public class PythonRunner {
 				public void run(){
 					try{
 						int result = sketchProcess.waitFor();
-						System.out.println("parallel process killed");
+						System.err.println("parallel process died with code "+result);
 						prepareReboot();
 					}catch(InterruptedException e){
 						System.err.println("someone interrupted the deathwatch thread");
@@ -121,9 +117,8 @@ public class PythonRunner {
 		}
 	}
 	public void parallelStarted(){
-		
 	}
-
+	
 	/*
 	 * Command to start the companion process
 	 */

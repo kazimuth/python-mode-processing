@@ -1,7 +1,5 @@
 package info.sansgills.mode.python.wrapper;
 
-import info.sansgills.mode.python.PythonEditor;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -76,7 +74,16 @@ public class ProcessingJythonWrapper {
 	 * in which case we get ready to connect and pass messages, or it's not, in
 	 * which case this is a one-shot job and nobody's listening
 	 */
-	public static void main(String[] args) {		
+	public static void main(String[] args) {
+		//kill ourselves if something bad happens
+		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler(){
+			public void uncaughtException(Thread t, Throwable e){
+				e.printStackTrace();
+				System.exit(0);
+			}
+		});
+		
+		
 		// the PDE will have this as the only arument if we're running paired
 		parallel = args[0].indexOf("--parallel") != -1;
 		
@@ -109,27 +116,26 @@ public class ProcessingJythonWrapper {
 		sys = Py.getSystemState(); // python 'sys' variable
 		
 		PySystemState.add_package("info.sansgills.mode.python.wrapper");
-		//PySystemState.add_package("processing.core");
-		//PySystemState.add_package("processing.opengl");
-		//PySystemState.add_package("processing.event");
-		//PySystemState.add_package("processing.data");
 		
 		ready = true;
 	}
 	
-	public static void sendStarted(){
-		System.err.println("__STARTED__");
-		System.out.println("started sent");
+	public static void sendStarted() {
+		if (parallel) {
+			System.err.println("__STARTED__");
+			System.err.flush();
+		}
 	}
 	public static void sendStopped(){
-		System.err.println("__STOPPED__");
-		System.out.println("stopped sent");
+		if (parallel) {
+			System.err.println("__STOPPED__");
+			System.err.flush();
+		}
 	}
-	
 	
 	public static void startSketch(String[] args){
 		if(applet != null){
-			applet.exit();
+			terminateSketch();
 			
 			while(applet != null){
 				try{
@@ -141,7 +147,7 @@ public class ProcessingJythonWrapper {
 		while (!ready) {
 			try {
 				Thread.sleep(50);
-			} catch (Exception e){}
+			} catch (InterruptedException e){}
 		}
 		
 		//applet is now null
@@ -580,5 +586,4 @@ public class ProcessingJythonWrapper {
 			}
 		}
 	}
-
 }

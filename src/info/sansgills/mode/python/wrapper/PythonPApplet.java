@@ -93,7 +93,6 @@ public class PythonPApplet extends PApplet {
 			if(e.getCause() instanceof RendererChangeException){
 				// Processing uses this to signal a change in renderer
 				// chuck it up the stack
-				System.out.println("renderer changing");
 				throw (RendererChangeException) e.getCause();
 			}else{
 				throw e;
@@ -169,14 +168,10 @@ public class PythonPApplet extends PApplet {
 	@Override
 	public void dispose(){
 		if (!disposed) {
-			System.out.println("disposing sketch");
 			disposed = true;
 			super.dispose();
 			frame.dispose();
-
 			ProcessingJythonWrapper.sketchDisposed();
-			
-			System.out.println("done disposing");
 		}
 	}
 	
