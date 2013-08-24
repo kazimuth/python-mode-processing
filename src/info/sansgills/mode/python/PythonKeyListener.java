@@ -25,40 +25,34 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 	PythonEditor peditor;
 	JEditTextArea ptextarea;
 
-	
 	//ctrl-alt on windows & linux, cmd-alt on os x
-	private static int CTRL_ALT = ActionEvent.ALT_MASK
-			| Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(); 
-	
-	
+	private static int CTRL_ALT = ActionEvent.ALT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
 	public PythonKeyListener(Editor editor, JEditTextArea textarea) {
 		super(editor, textarea);
-		
+
 		peditor = (PythonEditor) editor;
 		ptextarea = textarea;
 	}
-	
+
 	/*
 	 * Handles special stuff for Java brace indenting & outdenting, etc.
-	 * Overriding it 'cause we do things different here in python-land
-	 * 
-	 * TODO use actual parser; handle spaces
-	 * 
+	 * Overriding it 'cause we do things different here in python-land TODO use
+	 * actual parser; handle spaces
 	 * @return true if we've handled things correctly
 	 */
 	@Override
-	public boolean keyPressed(KeyEvent event){
+	public boolean keyPressed(KeyEvent event) {
 		char c = event.getKeyChar();
 		int code = event.getKeyCode();
-		
+
 		Sketch sketch = peditor.getSketch();
-		
+
 		// things that change the content of the text area
-		if ((code == KeyEvent.VK_BACK_SPACE) || (code == KeyEvent.VK_TAB)
-				|| (code == KeyEvent.VK_ENTER) || ((c >= 32) && (c < 128))) {
+		if ((code == KeyEvent.VK_BACK_SPACE) || (code == KeyEvent.VK_TAB) || (code == KeyEvent.VK_ENTER) || ((c >= 32) && (c < 128))) {
 			sketch.setModified(true);
 		}
-		
+
 		// ctrl-alt-[arrow] switches sketch tab
 		if ((event.getModifiers() & CTRL_ALT) == CTRL_ALT) {
 			if (code == KeyEvent.VK_LEFT) {
@@ -69,9 +63,9 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 				return true;
 			}
 		}
-		
+
 		//TODO handle ctrl-[up|down]; should move cursor to next empty line in that direction
-		
+
 		// handle specific keypresses
 		switch (c) {
 
@@ -83,46 +77,46 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 		case 13: //also return
 			String text = ptextarea.getText();	//text
 			int cursor = ptextarea.getCaretPosition();	//location of element to be placed; may be out of bounds
-			
+
 			ptextarea.setSelectedText(getIndent(cursor, text));
 			break;
 		}
-		
-		
-		
+
 		return false;
 	}
-	
+
 	private static Pattern findIndent = Pattern.compile("^((?: |\\t)*)");
 	private static Pattern incIndent = Pattern.compile(":( |\\t)*(#.*)?$"); //TODO fix; breaks on strings (":#"\n) and so on
-	
-	String getIndent(int cursor, String text){
-		if(cursor <= 1) return "\n";
-		
+
+	String getIndent(int cursor, String text) {
+		if (cursor <= 1) return "\n";
+
 		int lineStart, lineEnd;
 		int i;
-		for(i = cursor - 1; i>=0 && text.charAt(i)!='\n'; i--);
-		lineStart = i+1;
-		for(i = cursor - 1; i<text.length() && text.charAt(i)!='\n' ; i++);
+		for (i = cursor - 1; i >= 0 && text.charAt(i) != '\n'; i--)
+			;
+		lineStart = i + 1;
+		for (i = cursor - 1; i < text.length() && text.charAt(i) != '\n'; i++)
+			;
 		lineEnd = i;
-		
-		if(lineEnd <= lineStart) return "\n";
-		
+
+		if (lineEnd <= lineStart) return "\n";
+
 		String line = text.substring(lineStart, lineEnd);
-		
+
 		String indent;
 		Matcher f = findIndent.matcher(line);
-		
-		if(f.find()){
-			indent ='\n' + f.group();
-			
-			if (incIndent.matcher(line).find()){
+
+		if (f.find()) {
+			indent = '\n' + f.group();
+
+			if (incIndent.matcher(line).find()) {
 				indent += '\t';
 			}
-		}else{
+		} else {
 			indent = "\n";
 		}
-		
+
 		return indent;
 	}
 }

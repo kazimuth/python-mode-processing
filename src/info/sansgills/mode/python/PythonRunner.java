@@ -13,26 +13,22 @@ import processing.core.PApplet;
  * Class to handle the running of sketches. Starts a new ProcessingJythonWrapper
  * process and interfaces between it and the PDE.
  * 
- * TODO REPL?
- * 
- * 
  */
 
 public class PythonRunner {
-	PythonEditor editor;			// our editor (TODO command line?)
-	
+	PythonEditor editor;			// our editor
+
 	Process sketchProcess;			// the process we create
-	
+
 	// Threads to redirect output / error streams from process to us
 	Communicator communicator;
-	
+
 	boolean dying, needsReboot;
-	
+
 	public PythonRunner(PythonEditor editor) {
 		this.editor = editor;
 		dying = false;
-		
-		
+
 		//make sure our partner process is dead
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			public void run() {
@@ -40,13 +36,13 @@ public class PythonRunner {
 				if (communicator != null) {
 					communicator.destroy();
 				}
-				if(sketchProcess != null) {
+				if (sketchProcess != null) {
 					sketchProcess.destroy();
 				}
 			}
 		}));
 	}
-	
+
 	/*
 	 * Run the code.
 	 */
@@ -65,60 +61,60 @@ public class PythonRunner {
 		ensureParallel();
 		communicator.sendClose();
 	}
-	
-	
-	
+
 	/*
 	 * Sketch process died; get ready to reboot it
 	 */
-	private void prepareReboot(){
-		if(!dying){
+	private void prepareReboot() {
+		if (!dying) {
 			sketchProcess = null;
 			communicator.destroy();
 			communicator = null;
 		}
 	}
-	
+
 	/*
 	 * Force sketch process to restart
 	 */
-	public void forceReboot(){
-		if(sketchProcess != null) sketchProcess.destroy();
+	public void forceReboot() {
+		if (sketchProcess != null) sketchProcess.destroy();
 	}
-	
-	
+
 	/*
 	 * Make sure we've got a process to run the code.
 	 */
-	private void ensureParallel(){
-		if(sketchProcess == null){
+	private void ensureParallel() {
+		if (sketchProcess == null) {
 			sketchProcess = PApplet.exec(buildJavaArgs());
 			communicator = new Communicator(sketchProcess, this);
-			new Thread(new Runnable(){
-				public void run(){
-					try{
+			new Thread(new Runnable() {
+				public void run() {
+					try {
 						int result = sketchProcess.waitFor();
-						System.err.println("parallel process died with code "+result);
 						prepareReboot();
-					}catch(InterruptedException e){
-						System.err.println("someone interrupted the deathwatch thread");
-					}
+					} catch (InterruptedException e) {}
 				}
 			}).start();
 		}
 	}
-	
+
 	/*
 	 * Handle talking to companion process
 	 */
 	public void parallelStopped() {
-		if(needsReboot){
+		if (needsReboot) {
 			forceReboot();
 		}
+		editor.deactivateRun();
 	}
-	public void parallelStarted(){
+
+	public void parallelStarted() {}
+
+	public void parallelHung() {
+		System.err.println("Sketch hung.");
+		forceReboot();
 	}
-	
+
 	/*
 	 * Command to start the companion process
 	 */
@@ -165,55 +161,52 @@ public class PythonRunner {
 		}
 
 		//library path (for native things, etc.) and classpath
-		args.add("-Djava.library.path="+buildJavaLibraryPath());		
+		args.add("-Djava.library.path=" + buildJavaLibraryPath());
 		args.add("-cp");
 		args.add(buildClassPath());
 
 		args.add("info.sansgills.mode.python.wrapper.ProcessingJythonWrapper"); // main class
-		
+
 		//we parallel
 		args.add("--parallel");
 
 		return args.toArray(new String[0]);
 
 	}
-	
+
 	/*
 	 * Arguments for individual sketches
 	 */
 	private String[] buildSketchArgs(PythonBuild build, boolean present) {
 		ArrayList<String> args = new ArrayList<String>();
 
-		args.add("--script="+build.getResultFile()); // path to script
-		
+		args.add("--script=" + build.getResultFile()); // path to script
+
 		//the wrapper will dynamically inject these if it hasn't already
-		if(build.hasJavaLibraries()) args.add("--javalibs="+build.getJavaLibraries());
-		if(build.hasPythonLibraries()) args.add("--pylibs="+build.getPythonLibraries());
-		
+		if (build.hasJavaLibraries()) args.add("--javalibs=" + build.getJavaLibraries());
+		if (build.hasPythonLibraries()) args.add("--pylibs=" + build.getPythonLibraries());
+
 		// tell PApplet where the editor is and let it sort itself out
 		Point editorLocation = editor.getLocation();
-		args.add(PApplet.ARGS_EDITOR_LOCATION + "=" + editorLocation.x + ","
-				+ editorLocation.y);
+		args.add(PApplet.ARGS_EDITOR_LOCATION + "=" + editorLocation.x + "," + editorLocation.y);
 
 		if (present) {
 			args.add(PApplet.ARGS_FULL_SCREEN);
-			args.add(PApplet.ARGS_STOP_COLOR + "="
-					+ Preferences.get("run.present.stop.color"));
-			args.add(PApplet.ARGS_BGCOLOR + "="
-					+ Preferences.get("run.present.bgcolor"));
+			args.add(PApplet.ARGS_STOP_COLOR + "=" + Preferences.get("run.present.stop.color"));
+			args.add(PApplet.ARGS_BGCOLOR + "=" + Preferences.get("run.present.bgcolor"));
 		}
 
 		args.add(build.getName()); // sketch name MUST BE LAST
 
 		return args.toArray(new String[0]);
 	}
-	
-	
+
 	/*
-	 * Moving this here from PythonBuild because it's generic (i.e. not build-dependent)
-	 * We can send new libraries dynamically, as builds demand them
+	 * Moving this here from PythonBuild because it's generic (i.e. not
+	 * build-dependent) We can send new libraries dynamically, as builds demand
+	 * them
 	 */
-	private String buildClassPath(){
+	private String buildClassPath() {
 		// the Processing classpath
 		String classPath = editor.getMode().getCoreLibrary().getClassPath();
 
@@ -224,26 +217,21 @@ public class PythonRunner {
 		String javaClassPath = System.getProperty("java.class.path");
 		// Remove quotes if any.. A messy (and frequent) Windows problem
 		if (javaClassPath.startsWith("\"") && javaClassPath.endsWith("\"")) {
-			javaClassPath = javaClassPath.substring(1,
-					javaClassPath.length() - 1);
+			javaClassPath = javaClassPath.substring(1, javaClassPath.length() - 1);
 		}
 		classPath += File.pathSeparator + javaClassPath;
 
 		// The .jars for this mode; Jython and wrapper
-		String jythonModeLib = Base.getSketchbookModesFolder()
-				.getAbsolutePath()
-				+ File.separator
-				+ "PythonMode"
-				+ File.separator + "mode";
+		String jythonModeLib = Base.getSketchbookModesFolder().getAbsolutePath() + File.separator + "PythonMode" + File.separator + "mode";
 		classPath += Base.contentsToClassPath(new File(jythonModeLib));
-		
+
 		return classPath;
 	}
-	
+
 	/*
 	 * TODO figure out if I need anything else here
 	 */
-	private String buildJavaLibraryPath(){
+	private String buildJavaLibraryPath() {
 		return System.getProperty("java.library.path");
 	}
 }

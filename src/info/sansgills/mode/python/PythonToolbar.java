@@ -12,35 +12,41 @@ import processing.mode.java.JavaEditor;
 
 /**
  * 
- * The row of icons at the top of the PDE.
- * Handles images, titles, and clicking events.
- *
+ * The row of icons at the top of the PDE. Handles images, titles, and clicking
+ * events.
+ * 
  */
 
 //something up the chain is serializable, damned if I know why
 @SuppressWarnings("serial")
 public class PythonToolbar extends EditorToolbar {
 
-	static protected final int RUN 		= 0;
-	static protected final int STOP 	= 1;
+	static protected final int RUN = 0;
+	static protected final int STOP = 1;
 
-	static protected final int NEW		= 2;
-	static protected final int OPEN		= 3;
-	static protected final int SAVE 	= 4;
-	static protected final int EXPORT 	= 5;
+	static protected final int NEW = 2;
+	static protected final int OPEN = 3;
+	static protected final int SAVE = 4;
+	static protected final int EXPORT = 5;
 
 	static public String getTitle(int index, boolean shift) {
 		switch (index) {
-			case RUN:		return !shift ? "Run" : "Present";
-			case STOP:		return "Stop";
-			case NEW:		return "New";
-			case OPEN:		return "Open";
-			case SAVE:		return "Save";
-			case EXPORT:	return "Export Application";
+		case RUN:
+			return !shift ? "Run" : "Present";
+		case STOP:
+			return "Stop";
+		case NEW:
+			return "New";
+		case OPEN:
+			return "Open";
+		case SAVE:
+			return "Save";
+		case EXPORT:
+			return "Export Application";
 		}
 		return null;
 	}
-	
+
 	public PythonToolbar(Editor editor, Base base) {
 		super(editor, base);
 	}
@@ -83,11 +89,10 @@ public class PythonToolbar extends EditorToolbar {
 	}
 
 	@Override
-	public void init() { //open up the processing icons
-	    Image[][] images = loadImages();
-	    for (int i = 0; i < 6; i++) {
-	      addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW);
-	    }
-	  }
-
+	public void init() { // open up the processing icons
+		Image[][] images = loadImages();
+		for (int i = 0; i < 6; i++) {
+			addButton(getTitle(i, false), getTitle(i, true), images[i], i == NEW);
+		}
+	}
 }

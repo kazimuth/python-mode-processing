@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
+import javax.swing.JFrame;
+
 import org.python.core.*;
 import org.python.util.InteractiveConsole;
 
@@ -29,11 +31,11 @@ import processing.core.PApplet;
 
 /**
  * 
- * Class to handle running jython sketches. Packaged separately from the main mode for easy export.
- * Currently run from PythonRunner.java.
+ * Class to handle running jython sketches. Packaged separately from the main
+ * mode for easy export. Currently run from PythonRunner.java.
  * 
  * TODO REPL?
- *
+ * 
  * Architecture note: Processing.py has a 'PApplet Jython Driver' class that
  * contains a private Python interpreter. It injects the PApplet variables and
  * methods into this interpreter, updating whenever it needs to. It runs the
@@ -43,70 +45,66 @@ import processing.core.PApplet;
  * .pde input into a valid python class inheriting from PApplet, run the
  * resulting code through an interpreter, and extract the class to create a
  * final Java object to run as a PApplet.
- *
+ * 
  */
 
 public class ProcessingJythonWrapper {
 	static String prepend;
 	static String scrub;
-	
-	static final String[] sketchFunctions = { "setup", "draw", "mousePressed",
-			"mouseReleased", "mouseClicked", "mouseWheel", "mouseMoved",
-			"mouseDragged", "keyPressed", "keyReleased", "keyTyped" };
-	
+
+	static final String[] sketchFunctions = { "setup", "draw", "mousePressed", "mouseReleased", "mouseClicked", "mouseWheel", "mouseMoved", "mouseDragged", "keyPressed", "keyReleased", "keyTyped" };
+
 	static MessageReceiverThread receiver;
-	
+
 	static InteractiveConsole interp;		// python interpreter to feed things to
 	static PySystemState sys;				// for modifying python classpath, as yet
 	static PythonPApplet applet;	// Applet we pull from the interpreter
-	
+
 	static final String objname = "__applet__";
 	static final String separator = System.getProperty("path.separator");
-	
+
 	static Set<String> javaLibraries = new HashSet<String>();
 	static Set<String> pythonLibraries = new HashSet<String>();
 
 	static boolean parallel;
 	static boolean ready = false;
-	
+
 	/*
 	 * Starting up our process; either it's running in parallel with an editor,
 	 * in which case we get ready to connect and pass messages, or it's not, in
 	 * which case this is a one-shot job and nobody's listening
 	 */
 	public static void main(String[] args) {
-		//kill ourselves if something bad happens
-		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler(){
-			public void uncaughtException(Thread t, Throwable e){
+		// kill ourselves if something bad happens
+		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+			public void uncaughtException(Thread t, Throwable e) {
 				e.printStackTrace();
 				System.exit(0);
 			}
 		});
-		
-		
+
 		// the PDE will have this as the only arument if we're running paired
 		parallel = args[0].indexOf("--parallel") != -1;
-		
-		if (parallel) { //running from the PDE
+
+		if (parallel) { // running from the PDE
 			receiver = new MessageReceiverThread(System.in);
 			receiver.start();
 			prepare();
-		} else {		//on our own
+		} else {		// on our own
 			prepare();
 			runSketch(args);
 		}
 	}
-	
+
 	/*
 	 * Things we need to run only once.
 	 */
 	public static void prepare() {
 		prepend = new Scanner(ProcessingJythonWrapper.class.getResourceAsStream("prepend.py")).useDelimiter("\\A").next();
 		scrub = new Scanner(ProcessingJythonWrapper.class.getResourceAsStream("scrub.py")).useDelimiter("\\A").next();
-		
+
 		if (PythonPApplet.platform == PythonPApplet.MACOSX) {
-			System.setProperty("apple.awt.graphics.UseQuartz",
-					String.valueOf(PythonPApplet.useQuartz));
+			System.setProperty("apple.awt.graphics.UseQuartz", String.valueOf(PythonPApplet.useQuartz));
 		}
 
 		// Doesn't seem to do much to help avoid flicker
@@ -114,54 +112,56 @@ public class ProcessingJythonWrapper {
 
 		interp = new InteractiveConsole(); // create jython environment
 		sys = Py.getSystemState(); // python 'sys' variable
-		
+
 		PySystemState.add_package("info.sansgills.mode.python.wrapper");
-		
+
 		ready = true;
 	}
-	
+
 	public static void sendStarted() {
 		if (parallel) {
 			System.err.println("__STARTED__");
 			System.err.flush();
 		}
 	}
-	public static void sendStopped(){
+
+	public static void sendStopped() {
 		if (parallel) {
 			System.err.println("__STOPPED__");
 			System.err.flush();
 		}
 	}
-	
-	public static void startSketch(String[] args){
-		if(applet != null){
+
+	public static void startSketch(String[] args) {
+		if (applet != null) {
 			terminateSketch();
-			
-			while(applet != null){
-				try{
+
+			while (applet != null) {
+				try {
 					Thread.sleep(50);
-				}catch(InterruptedException e){}
+				} catch (InterruptedException e) {
+				}
 			}
 		}
-		
+
 		while (!ready) {
 			try {
 				Thread.sleep(50);
-			} catch (InterruptedException e){}
+			} catch (InterruptedException e) {
+			}
 		}
-		
-		//applet is now null
-		//python context is up and running
-		//we're good to go, hopefully
-				
+
+		// applet is now null
+		// python context is up and running
+		// we're good to go, hopefully
+
 		runSketch(args);
 	}
-	
-	
+
 	/*
 	 * 
 	 */
-	public static void constructApplet(String scriptPath){
+	public static void constructApplet(String scriptPath) {
 		try {
 			// run prepend.py
 			interp.exec(prepend);
@@ -172,9 +172,9 @@ public class ProcessingJythonWrapper {
 			// get the applet we constructed
 			PyObject pythonApplet = interp.get(objname);
 
-			//make sure we've got something
+			// make sure we've got something
 			if (pythonApplet == null) throw new Exception("Couldn't construct applet.");
-			
+
 			// aaaand convert to an applet through jython magic
 			applet = (PythonPApplet) pythonApplet.__tojava__(PythonPApplet.class);
 
@@ -186,48 +186,50 @@ public class ProcessingJythonWrapper {
 					applet.inject(name, function);
 				}
 			}
-			
-			//done!
+
+			// done!
 		} catch (Exception e) {
-			System.err.println("Error running sketch: " + e.getMessage()); // TODO do some proper parsing
+			System.err.println("Error running sketch: " + e.getMessage()); // TODO
+																			// do
+																			// some
+																			// proper
+																			// parsing
 			e.printStackTrace();
 			if (applet != null) {
 				applet.exit();
 			}
 		}
 	}
-	
-	
+
 	/*
-	 * We've been told to kill the sketch by an external source
-	 * Calling the exit function and letting it sort itself out
+	 * We've been told to kill the sketch by an external source Calling the exit
+	 * function and letting it sort itself out
 	 */
-	public static void terminateSketch(){
-		if (applet != null){
+	public static void terminateSketch() {
+		if (applet != null) {
 			applet.exit();
 		}
 	}
-	
+
 	/*
 	 * Sketch has released all its resources; we're forgetting about it
 	 * Hopefully this doesn't leak...
 	 */
-	public static void sketchDisposed(){
+	public static void sketchDisposed() {
 		scrubContext();
-		applet = null; //all done
-		sendStopped(); //signal the mothership
+		applet = null; // all done
+		sendStopped(); // signal the mothership
 	}
-	
-	
+
 	/*
 	 * Clean up our python context.
 	 */
-	public static void scrubContext(){
+	public static void scrubContext() {
 		interp.exec(scrub);
 	}
-	
+
 	/*
-	 *  A monolithic method to make a sketch go.
+	 * A monolithic method to make a sketch go.
 	 */
 	public static void runSketch(final String args[]) {
 		if (args.length < 1) {
@@ -238,12 +240,12 @@ public class ProcessingJythonWrapper {
 
 		int[] location = null;
 		int[] editorLocation = null;
-		
+
 		String scriptPath = null;
 
 		String name = null;
 		boolean present = false;
-		Color backgroundColor = null; 
+		Color backgroundColor = null;
 		Color stopColor = Color.GRAY;
 		GraphicsDevice displayDevice = null;
 		boolean hideStop = false;
@@ -256,7 +258,8 @@ public class ProcessingJythonWrapper {
 		String folder = null;
 		try {
 			folder = System.getProperty("user.dir");
-		} catch (Exception e) {}
+		} catch (Exception e) {
+		}
 
 		int argIndex = 0;
 		while (argIndex < args.length) {
@@ -269,32 +272,26 @@ public class ProcessingJythonWrapper {
 					editorLocation = PythonPApplet.parseInt(PythonPApplet.split(value, ','));
 				} else if (param.equals(PythonPApplet.ARGS_DISPLAY)) {
 					int deviceIndex = Integer.parseInt(value);
-					GraphicsEnvironment environment = GraphicsEnvironment
-							.getLocalGraphicsEnvironment();
+					GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment();
 					GraphicsDevice devices[] = environment.getScreenDevices();
 					if ((deviceIndex >= 0) && (deviceIndex < devices.length)) {
 						displayDevice = devices[deviceIndex];
 					} else {
-						System.err.println("Display " + value
-								+ " does not exist, "
-								+ "using the default display instead.");
+						System.err.println("Display " + value + " does not exist, " + "using the default display instead.");
 						for (int i = 0; i < devices.length; i++) {
 							System.err.println(i + " is " + devices[i]);
 						}
 					}
 				} else if (param.equals(PythonPApplet.ARGS_BGCOLOR)) {
-					if (value.charAt(0) == '#')
-						value = value.substring(1);
+					if (value.charAt(0) == '#') value = value.substring(1);
 					backgroundColor = new Color(Integer.parseInt(value, 16));
 				} else if (param.equals(PythonPApplet.ARGS_STOP_COLOR)) {
-					if (value.charAt(0) == '#')
-						value = value.substring(1);
+					if (value.charAt(0) == '#') value = value.substring(1);
 					stopColor = new Color(Integer.parseInt(value, 16));
 				} else if (param.equals(PythonPApplet.ARGS_SKETCH_FOLDER)) {
 					folder = value;
 				} else if (param.equals(PythonPApplet.ARGS_LOCATION)) {
-					location = PythonPApplet.parseInt(PythonPApplet.split(
-							value, ','));
+					location = PythonPApplet.parseInt(PythonPApplet.split(value, ','));
 				} else if (param.equals("--script")) {
 					scriptPath = value;
 				} else if (param.equals("--pylibs")) {
@@ -318,7 +315,9 @@ public class ProcessingJythonWrapper {
 				}
 
 			} else {
-				if (args[argIndex].equals(PythonPApplet.ARGS_PRESENT)) { // keep for compatability
+				if (args[argIndex].equals(PythonPApplet.ARGS_PRESENT)) { // keep
+																			// for
+																			// compatability
 					present = true;
 
 				} else if (args[argIndex].equals(PythonPApplet.ARGS_FULL_SCREEN)) {
@@ -349,11 +348,12 @@ public class ProcessingJythonWrapper {
 			displayDevice = environment.getDefaultScreenDevice();
 		}
 
-		Frame frame = new Frame(displayDevice.getDefaultConfiguration());
-		frame.setBackground(new Color(0xCC, 0xCC, 0xCC)); // default Processing gray
-		
+		Frame frame = new JFrame(displayDevice.getDefaultConfiguration());
+		frame.setBackground(new Color(0xCC, 0xCC, 0xCC)); // default Processing
+															// gray
+
 		constructApplet(scriptPath);
-		
+
 		if (applet == null) {
 			System.err.println("Where's the applet?");
 			return;
@@ -369,14 +369,13 @@ public class ProcessingJythonWrapper {
 		// (fixed for 2.0a5, this was just subsetting by 1, which didn't skip
 		// opts)
 		applet.args = PApplet.subset(args, argIndex + 1);
-		
+
 		applet.external = parallel;
 
 		// Need to save the window bounds at full screen,
 		// because pack() will cause the bounds to go to zero.
 		// http://dev.processing.org/bugs/show_bug.cgi?id=923
-		Rectangle screenRect = displayDevice.getDefaultConfiguration()
-				.getBounds();
+		Rectangle screenRect = displayDevice.getDefaultConfiguration().getBounds();
 		// DisplayMode doesn't work here, because we can't get the upper-left
 		// corner of the display, which is important for multi-display setups.
 
@@ -408,7 +407,8 @@ public class ProcessingJythonWrapper {
 			frame.pack();
 		}
 
-		// disabling resize has to happen after pack() to avoid apparent Apple bug
+		// disabling resize has to happen after pack() to avoid apparent Apple
+		// bug
 		// http://code.google.com/p/processing/issues/detail?id=467
 		frame.setResizable(false);
 
@@ -426,16 +426,16 @@ public class ProcessingJythonWrapper {
 
 		if (present) {
 			if (PythonPApplet.platform == PythonPApplet.MACOSX) {
-				// Call some native code to remove the menu bar on OS X. Not necessary
-				// on Linux and Windows, who are happy to make full screen windows.
+				// Call some native code to remove the menu bar on OS X. Not
+				// necessary
+				// on Linux and Windows, who are happy to make full screen
+				// windows.
 				japplemenubar.JAppleMenuBar.hide();
 			}
 
 			// After the pack(), the screen bounds are gonna be 0s
 			frame.setBounds(screenRect);
-			applet.setBounds((screenRect.width - applet.width) / 2,
-					(screenRect.height - applet.height) / 2, applet.width,
-					applet.height);
+			applet.setBounds((screenRect.width - applet.width) / 2, (screenRect.height - applet.height) / 2, applet.width, applet.height);
 
 			if (!hideStop) {
 				Label label = new Label("stop");
@@ -462,12 +462,13 @@ public class ProcessingJythonWrapper {
 		} else { // if not presenting
 			// can't do pack earlier cuz present mode don't like it
 			// (can't go full screen with a frame after calling pack)
-			Insets insets = frame.getInsets();
 
-			int windowW = Math.max(applet.width, PythonPApplet.MIN_WINDOW_WIDTH)
-					+ insets.left + insets.right;
-			int windowH = Math.max(applet.height, PythonPApplet.MIN_WINDOW_HEIGHT)
-					+ insets.top + insets.bottom;
+			Insets insets = frame.getInsets();
+			int windowW = Math.max(applet.width, PythonPApplet.MIN_WINDOW_WIDTH) + insets.left + insets.right;
+			int windowH = Math.max(applet.height, PythonPApplet.MIN_WINDOW_HEIGHT) + insets.top + insets.bottom;
+
+			int contentW = Math.max(applet.width, PythonPApplet.MIN_WINDOW_WIDTH);
+			int contentH = Math.max(applet.height, PythonPApplet.MIN_WINDOW_HEIGHT);
 
 			frame.setSize(windowW, windowH);
 
@@ -491,8 +492,7 @@ public class ProcessingJythonWrapper {
 					locationX = editorLocation[0] + 66;
 					locationY = editorLocation[1] + 66;
 
-					if ((locationX + windowW > applet.displayWidth - 33)
-							|| (locationY + windowH > applet.displayHeight - 33)) {
+					if ((locationX + windowW > applet.displayWidth - 33) || (locationY + windowH > applet.displayHeight - 33)) {
 						// otherwise center on screen
 						locationX = (applet.displayWidth - windowW) / 2;
 						locationY = (applet.displayHeight - windowH) / 2;
@@ -504,13 +504,12 @@ public class ProcessingJythonWrapper {
 				// the
 				// frame to the main display, which undermines the --display
 				// setting.
-				frame.setLocation(screenRect.x
-						+ (screenRect.width - applet.width) / 2, screenRect.y
-						+ (screenRect.height - applet.height) / 2);
+				frame.setLocation(screenRect.x + (screenRect.width - applet.width) / 2, screenRect.y + (screenRect.height - applet.height) / 2);
 			}
 			Point frameLoc = frame.getLocation();
 			if (frameLoc.y < 0) {
-				// Windows actually allows you to place frames where they can't be closed. Awesome.
+				// Windows actually allows you to place frames where they can't
+				// be closed. Awesome.
 				// http://dev.processing.org/bugs/show_bug.cgi?id=1508
 				frame.setLocation(frameLoc.x, 30);
 			}
@@ -519,11 +518,8 @@ public class ProcessingJythonWrapper {
 				frame.setBackground(backgroundColor);
 			}
 
-			int usableWindowH = windowH - insets.top - insets.bottom;
-			applet.setBounds((windowW - applet.width) / 2, insets.top
-					+ (usableWindowH - applet.height) / 2, applet.width,
-					applet.height);
-			
+			applet.setBounds((contentW - applet.width) / 2, (contentH - applet.height) / 2, applet.width, applet.height);
+
 			// send messages back to the PDE
 			if (parallel) {
 				setupExternalMessages(frame);
@@ -534,11 +530,26 @@ public class ProcessingJythonWrapper {
 			// all set for rockin
 			if (applet.displayable()) {
 				frame.setVisible(true);
+				if (PythonPApplet.platform == PythonPApplet.LINUX) {
+					// Linux doesn't deal with insets the same way. We get fake
+					// insets
+					// earlier, and then the window manager will slap its own
+					// insets
+					// onto things once the frame is realized on the screen.
+					// Awzm.
+					Insets irlInsets = frame.getInsets();
+					if (!irlInsets.equals(insets)) {
+						insets = irlInsets;
+						windowW = Math.max(applet.width, PythonPApplet.MIN_WINDOW_WIDTH) + insets.left + insets.right;
+						windowH = Math.max(applet.height, PythonPApplet.MIN_WINDOW_HEIGHT) + insets.top + insets.bottom;
+						frame.setSize(windowW, windowH);
+					}
+				}
 			}
 		}
-		sendStarted(); //signal the mothership
+		sendStarted(); // signal the mothership
 	}
-	
+
 	/*
 	 * 
 	 */
@@ -546,25 +557,25 @@ public class ProcessingJythonWrapper {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				//exit method handles sending messages; we're done here
+				// exit method handles sending messages; we're done here
 				terminateSketch();
 			}
 		});
 	}
-	
+
 	/*
-	 * Class to handle receiving messages from the PDE
-	 * not to be confused with Communicator.MessageReceiverThread; same idea, different location
+	 * Class to handle receiving messages from the PDE not to be confused with
+	 * Communicator.MessageReceiverThread; same idea, different location
 	 */
-	private static class MessageReceiverThread extends Thread{
+	private static class MessageReceiverThread extends Thread {
 		BufferedReader messageReader;
 		public boolean running;
-		
-		public MessageReceiverThread(InputStream messageStream){
+
+		public MessageReceiverThread(InputStream messageStream) {
 			this.messageReader = new BufferedReader(new InputStreamReader(messageStream));
 			this.running = true;
 		}
-		
+
 		public void run() {
 			try {
 				String currentLine;
@@ -574,7 +585,7 @@ public class ProcessingJythonWrapper {
 					try {
 						if (currentLine.indexOf("__STOP__") != -1) {
 							terminateSketch();
-						}else if (currentLine.indexOf("__SKETCH__") != -1){
+						} else if (currentLine.indexOf("__SKETCH__") != -1) {
 							startSketch(PythonPApplet.subset(currentLine.split(" "), 1));
 						}
 					} catch (Exception e) {
