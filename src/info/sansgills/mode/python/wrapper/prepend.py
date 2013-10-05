@@ -58,6 +58,7 @@ def __mul__(a, b):
     return PVector(a.x * b, a.y * b, a.z * b)
 
 __applet__ = PythonPApplet()
+this = __applet__
 g = globals()
 	
 for constant in PythonPApplet.constants:
