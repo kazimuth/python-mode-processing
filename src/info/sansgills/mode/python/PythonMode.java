@@ -10,7 +10,8 @@ import processing.mode.java.runner.Runner;
 
 /**
  * 
- * Python Mode. Yeah.
+ * The main mode class. I don't actually implement much functionality here; just
+ * what the Mode class is contractually obligated to provide.
  * 
  */
 public class PythonMode extends Mode {

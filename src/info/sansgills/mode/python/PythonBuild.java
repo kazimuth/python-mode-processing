@@ -24,8 +24,6 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
  * interpreter, all this does is handle preprocessing and write to an output
  * file.
  * 
- * See BUILD.md for notes.
- * 
  */
 
 public class PythonBuild {
@@ -41,7 +39,7 @@ public class PythonBuild {
 
 	boolean usesOpenGL;
 
-	//build tracking
+	//build tracking, not that this actually does anything
 	private int buildnumber;
 	private static int buildstotal = 0;
 
@@ -57,9 +55,9 @@ public class PythonBuild {
 	 * Preprocess the sketch- turn the .pde files into valid python.
 	 */
 	public void build() throws Exception {
+		//to hold all the code
 		StringBuilder program = new StringBuilder();
-
-		SketchCode[] parts = sketch.getCode(); //fix'd
+		SketchCode[] parts = sketch.getCode();
 
 		//concatenate code strings
 		//TODO do this in some sort of vaguely intelligent way
@@ -68,11 +66,13 @@ public class PythonBuild {
 			program.append(parts[i].getProgram());
 		}
 
+		//send to preprocessor
 		resultProgram = preprocess(program);
 
-		//write output file
+		//create output folder
 		binFolder = sketch.makeTempFolder();
 
+		//create & write to output file
 		outFile = new File(binFolder.getAbsolutePath() + File.separator + sketch.getName().toLowerCase() + ".py");
 		outFile.createNewFile();
 
@@ -81,17 +81,18 @@ public class PythonBuild {
 		writer.close();
 	}
 
-	private static Pattern whitespace = Pattern.compile("\\s*");
-
 	/*
-	 * Turn .pde into valid python Now with antlr!
+	 * Turn .pde files into valid python and extract used libraries See
+	 * PyPdeConverter / generated antlr code for the actual preprocessing logic.
 	 */
 	private String preprocess(StringBuilder program) throws Exception {
-		if (whitespace.matcher(program).matches()) {
-			return "def setup():\n\tpass\n\n"; //empty sketch; TODO fix hack
+		if (Pattern.matches("\\s*", program)) {
+			return "def setup():\n\tpass\n\n";
 		}
 		try {
 			program.append("\n"); //to be safe
+
+			//now for the antlr
 			PyPdeLexer lexer = new PyPdeLexer(new ANTLRInputStream(program.toString()));
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			PyPdeParser parser = new PyPdeParser(tokens);
@@ -118,7 +119,8 @@ public class PythonBuild {
 					String entry = (dot == -1) ? lib : lib.substring(0, dot);
 					Library library = mode.getLibrary(entry);
 					if (library == null) {
-						throw new Exception("Unknown library: " + lib);
+						System.err.println("I don't know about the library "+lib+" so it might not work. Sorry.");
+						continue;
 					}
 					javaLibs += library.getJarPath() + System.getProperty("path.separator");
 				}
@@ -139,6 +141,9 @@ public class PythonBuild {
 		}
 	}
 
+	/*
+	 * Access to extracted library information
+	 */
 	public String getJavaLibraries() {
 		return javaLibs;
 	}
@@ -156,7 +161,7 @@ public class PythonBuild {
 	}
 
 	/*
-	 * The output code string
+	 * The output code string, properly formatted and whatnot.
 	 */
 	public String getResultString() {
 		return resultProgram;
@@ -170,25 +175,29 @@ public class PythonBuild {
 	}
 
 	/*
-	 * 
+	 * This may eventually tie in to some global thing... or not
 	 */
 	public int getBuildNumber() {
 		return buildnumber;
 	}
 
 	/*
-	 * Classes used to run the build.
+	 * Java classes used to run the build.
 	 */
 	public String getClassPath() {
 		return classPath; //computed during preprocessing
 	}
 
+	/*
+	 * ...
+	 */
 	public String getName() {
 		return sketch.getName();
 	}
 
 	/*
-	 * TODO
+	 * I'm not sure what the java library path actually is, so, leaving this
+	 * blank.
 	 */
 	public String getJavaLibraryPath() {
 		return "";

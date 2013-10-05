@@ -37,9 +37,9 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 
 	/*
 	 * Handles special stuff for Java brace indenting & outdenting, etc.
-	 * Overriding it 'cause we do things different here in python-land TODO use
-	 * actual parser; handle spaces
-	 * @return true if we've handled things correctly
+	 * Overriding it 'cause we do things different here in python-land 
+	 * TODO use actual parser; handle spaces
+	 * 
 	 */
 	@Override
 	public boolean keyPressed(KeyEvent event) {

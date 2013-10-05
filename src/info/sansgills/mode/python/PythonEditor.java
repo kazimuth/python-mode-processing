@@ -19,8 +19,10 @@ import processing.mode.java.JavaToolbar;
 
 /**
  * 
- * Main editor. Superclass handles most of the nitty-gritty; we just have to
- * manage python-specific things, like running and stopping.
+ * The main editor class. Unlike in Java Mode the editor also handles running and exporting code,
+ * because I'm lazy.
+ * 
+ * Does basically what you'd expect it to.
  * 
  */
 @SuppressWarnings("serial")

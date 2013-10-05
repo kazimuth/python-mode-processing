@@ -9,6 +9,25 @@ import java.util.regex.Pattern;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.TokenStreamRewriter;
 
+/**
+ * 
+ * So, this class extends antlr's listener class in order to create the
+ * functionality we need. We're being fed parsed python code with lexical
+ * & semantic info attached, and we need to go through it and futz with 
+ * some things to make Processing code behave as expected.
+ * 
+ * Rather than reformatting the whole script as a class definition and 
+ * instantiating one to use as a PApplet, we inject a bunch of functions
+ * that reference a special PApplet instance, tell it to use the user-defined 
+ * PApplet functions, and then run it normally. However, there are a few things
+ * that this doesn't work for: instance variables and a few things that are
+ * polymorphic (I think?) in java- frameRate is a variable and a function, for
+ * instance.
+ * 
+ * So, this class fixes those.
+ * 
+ */
+
 public class PyPdeConverter extends PyPdeBaseListener {
 	TokenStreamRewriter rewriter;
 
@@ -137,15 +156,4 @@ public class PyPdeConverter extends PyPdeBaseListener {
 	public void enterModule(PyPdeParser.ModuleContext ctx) {
 		imports.add(ctx.getText());
 	}
-
-	/*
-	 * @Override public void
-	 * enterTargetIdentifier(PyPdeParser.TargetIdentifierContext ctx){
-	 * if(indentLevel == 0){ globals.add(ctx.getText()); } } String
-	 * getGlobalInjection(){ Iterator<String> it = globals.iterator(); if
-	 * (it.hasNext()) { StringBuilder stmt = new StringBuilder("global ");
-	 * stmt.append(it.next()); while (it.hasNext()) { stmt.append(",");
-	 * stmt.append(it.next()); } return stmt.toString(); } else { return null; }
-	 * }
-	 */
 }

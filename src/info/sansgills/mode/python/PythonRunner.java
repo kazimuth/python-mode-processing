@@ -13,6 +13,8 @@ import processing.core.PApplet;
  * Class to handle the running of sketches. Starts a new ProcessingJythonWrapper
  * process and interfaces between it and the PDE.
  * 
+ * Synchronization is a horrible tangled mess and I don't remember how it works.
+ * 
  */
 
 public class PythonRunner {

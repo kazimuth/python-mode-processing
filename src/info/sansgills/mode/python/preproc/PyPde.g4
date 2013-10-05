@@ -1,14 +1,15 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * A fairly complete python2.7 parser, written with ANTLR4.
+ * Uses some ANTLR black magic to handle lexing indents & dedents, which parsers don't like.
  */
 
 grammar PyPde;
 
+//these are injected into the headers of the generated parser & lexer.
 @parser::header {
                  package info.sansgills.mode.python.preproc;
                  }
-
+                 
 @lexer::header {
                 package info.sansgills.mode.python.preproc;
                 
@@ -20,7 +21,7 @@ grammar PyPde;
                 import org.antlr.v4.runtime.misc.Interval;
                 }
 
-//some black magic
+//this is injected into the generated lexer. It overrides ANTLR's default 'go to next token' method in order to handle *dents.
 @lexer::members {
                  int bracket_nesting_level = 0;
                  int parenth_nesting_level = 0;
@@ -109,12 +110,15 @@ grammar PyPde;
                  }
                  }
 
+//and on the the actual parser.
+//essentially copied from http://docs.python.org/2/reference/, and probably quite inefficient.
+
 
 script: (NEWLINE | statement)*;
 
 
 //lexer!
-//strings first, so they'll gobble things up first
+//strings first, so they'll gobble things up
 
 STRING: STRINGPREFIX? (SHORTSTRING | LONGSTRING);
 fragment SHORTSTRING: '\'' (~('\\'|'\n'|'\'')|'\\'.)* '\'' 
@@ -203,7 +207,7 @@ WS: [ \t]+ -> channel(HIDDEN);
 
 
 // onto the parser
-// atomic values: identifiers and literals (including enclodure literals
+// atomic values: identifiers and literals (including enclosure literals)
 atom      :  identifier | literal | enclosure;
 
 literal:    STRING | INTEGER | IMAGINARY | FLOAT;

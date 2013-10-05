@@ -13,6 +13,9 @@ To install: unzip PythonMode.zip into "{your sketch folder}/modes/PythonMode" an
 
 Check build.xml for building instructions.
 
+Changes:
+- the Processing set() function is now called setPixel(), because python
+
 Done:
 - Basic functionality- running python code
 - Basic indentation & highlighting

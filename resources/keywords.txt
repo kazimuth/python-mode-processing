@@ -176,8 +176,14 @@ UP	LITERAL2	keyCode
 WAIT	LITERAL2	cursor_
 WHITESPACE	LITERAL2		
 
+# Python literals
+None	LITERAL2
+True	LITERAL2
+False	LITERAL2
+Ellipsis	LITERAL2
+NotImplemented LITERAL2
 
-# Java [python] keywords (void, import, , etc.)
+# Python keywords
 	
 and	KEYWORD1	
 as	KEYWORD1
@@ -427,7 +433,7 @@ keyArray	FUNCTION2	FloatDict_keyArray_
 keys	FUNCTION2	FloatDict_keys_
 mult	FUNCTION2	FloatDict_mult_
 remove	FUNCTION2	FloatDict_remove_
-set	FUNCTION2	FloatDict_set_
+setPixel	FUNCTION2	FloatDict_set_
 size	FUNCTION2	FloatDict_size_
 sortKeys	FUNCTION2	FloatDict_sortKeys_
 sortKeysReverse	FUNCTION2	FloatDict_sortKeysReverse_

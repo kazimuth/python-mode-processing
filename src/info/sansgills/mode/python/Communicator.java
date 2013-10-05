@@ -12,8 +12,8 @@ import processing.app.exec.StreamRedirectThread;
 
 /**
  * 
- * The glue between the PDE process and the sketch process Handles sending
- * messages to and recieving messages from
+ * A class that sends data to and gets data from the running sketch process.
+ * Sends start signals, stop signals, and sketches.
  * 
  */
 

@@ -31,20 +31,20 @@ import processing.core.PApplet;
 
 /**
  * 
- * Class to handle running jython sketches. Packaged separately from the main
- * mode for easy export. Currently run from PythonRunner.java.
+ * Class that handles running all processing-python-mode sketches. Can run in
+ * parallel with Processing or all on its own (in theory)
  * 
- * TODO REPL?
+ * Creates a python interpreter and a PythonPApplet instance, injects the
+ * instance along with a bunch of PApplet methods bound to it (by executing
+ * prepend.py) into the interpreter, recieves a script and runs it in the
+ * interpreter, pulls newly defined functions out of the interpreter, gives them
+ * to the instance, and runs the instance as a PApplet.
  * 
- * Architecture note: Processing.py has a 'PApplet Jython Driver' class that
- * contains a private Python interpreter. It injects the PApplet variables and
- * methods into this interpreter, updating whenever it needs to. It runs the
- * input python directly, without modification.
- * 
- * I'm using a different approach, similar to vanilla Processing: preprocess the
- * .pde input into a valid python class inheriting from PApplet, run the
- * resulting code through an interpreter, and extract the class to create a
- * final Java object to run as a PApplet.
+ * Also note that when the instance is done running, this doesn't have to shut
+ * down; it can just as easily run the next script the PDE sends, so it just
+ * chills out and waits for messages to come down the line. The synchronization
+ * for this is a tangled mess. Also, setting the renderer to an OPENGL one can
+ * break this, so it shuts down and the PDE sets up another one.
  * 
  */
 
@@ -58,7 +58,7 @@ public class ProcessingJythonWrapper {
 
 	static InteractiveConsole interp;		// python interpreter to feed things to
 	static PySystemState sys;				// for modifying python classpath, as yet
-	static PythonPApplet applet;	// Applet we pull from the interpreter
+	static PythonPApplet applet;
 
 	static final String objname = "__applet__";
 	static final String separator = System.getProperty("path.separator");
@@ -139,16 +139,14 @@ public class ProcessingJythonWrapper {
 			while (applet != null) {
 				try {
 					Thread.sleep(50);
-				} catch (InterruptedException e) {
-				}
+				} catch (InterruptedException e) {}
 			}
 		}
 
 		while (!ready) {
 			try {
 				Thread.sleep(50);
-			} catch (InterruptedException e) {
-			}
+			} catch (InterruptedException e) {}
 		}
 
 		// applet is now null
@@ -258,8 +256,7 @@ public class ProcessingJythonWrapper {
 		String folder = null;
 		try {
 			folder = System.getProperty("user.dir");
-		} catch (Exception e) {
-		}
+		} catch (Exception e) {}
 
 		int argIndex = 0;
 		while (argIndex < args.length) {

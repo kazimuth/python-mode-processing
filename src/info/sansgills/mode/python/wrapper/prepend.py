@@ -1,4 +1,4 @@
-#see PythonMode/prepend-commented.py for something sensible
+#run before every sketch; define things
 
 import info.sansgills.mode.python.wrapper.PythonPApplet as PythonPApplet
 import processing.core.PApplet as PApplet
@@ -7,6 +7,7 @@ import processing.core.PFont as PFont
 import processing.core.PVector as RealPVector
 import processing.core.PConstants as PConstants
 
+#from processing.py
 class PVector(object): 
     @classmethod
     def __new__(cls, *args):
@@ -56,12 +57,8 @@ def __mul__(a, b):
         raise TypeError("The * operator can only be used to multiply a PVector by a scalar")
     return PVector(a.x * b, a.y * b, a.z * b)
 
-
 __applet__ = PythonPApplet()
 g = globals()
-
-for method in PythonPApplet.staticMethods:
-	g[method] = PApplet.__dict__[method]
 	
 for constant in PythonPApplet.constants:
 	g[constant] = PConstants.__dict__[constant]._doget(__applet__)
@@ -239,4 +236,78 @@ triangle = __applet__.triangle
 updatePixels = __applet__.updatePixels
 vertex = __applet__.vertex
 
-del monkeypatch_method, g, __sub__, __add__, __mul__, method, PApplet, PConstants, PythonPApplet
+abs = PApplet.abs
+acos = PApplet.acos
+append = PApplet.append
+arrayCopy = PApplet.arrayCopy
+asin = PApplet.asin
+atan = PApplet.atan
+atan2 = PApplet.atan2
+binary = PApplet.binary
+blendColor = PApplet.blendColor
+ceil = PApplet.ceil
+concat = PApplet.concat
+constrain = PApplet.constrain
+cos = PApplet.cos
+createInput = PApplet.createInput
+createOutput = PApplet.createOutput
+createReader = PApplet.createReader
+createWriter = PApplet.createWriter
+day = PApplet.day
+debug = PApplet.debug
+degrees = PApplet.degrees
+dist = PApplet.dist
+#exec = PApplet.exec
+exp = PApplet.exp
+expand = PApplet.expand
+floor = PApplet.floor
+hex = PApplet.hex
+hour = PApplet.hour
+join = PApplet.join
+lerp = PApplet.lerp
+lerpColor = PApplet.lerpColor
+loadBytes = PApplet.loadBytes
+loadStrings = PApplet.loadStrings
+log = PApplet.log
+mag = PApplet.mag
+map = PApplet.map
+match = PApplet.match
+matchAll = PApplet.matchAll
+max = PApplet.max
+min = PApplet.min
+minute = PApplet.minute
+month = PApplet.month
+nf = PApplet.nf
+nfc = PApplet.nfc
+nfp = PApplet.nfp
+nfs = PApplet.nfs
+norm = PApplet.norm
+pow = PApplet.pow
+#print = PApplet.print
+println = PApplet.println
+radians = PApplet.radians
+reverse = PApplet.reverse
+round = PApplet.round
+saveBytes = PApplet.saveBytes
+saveStream = PApplet.saveStream
+saveStrings = PApplet.saveStrings
+second = PApplet.second
+shorten = PApplet.shorten
+sin = PApplet.sin
+sort = PApplet.sort
+splice = PApplet.splice
+split = PApplet.split
+splitTokens = PApplet.splitTokens
+sq = PApplet.sq
+sqrt = PApplet.sqrt
+subset = PApplet.subset
+tan = PApplet.tan
+trim = PApplet.trim
+unbinary = PApplet.unbinary
+unhex = PApplet.unhex
+year = PApplet.year
+
+def setPixel(*args):
+    __applet__.set(*args)
+
+del monkeypatch_method, g, __sub__, __add__, __mul__, PApplet, PConstants, PythonPApplet

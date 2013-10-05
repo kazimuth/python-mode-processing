@@ -17,7 +17,6 @@ import processing.mode.java.JavaEditor;
  * 
  */
 
-//something up the chain is serializable, damned if I know why
 @SuppressWarnings("serial")
 public class PythonToolbar extends EditorToolbar {
 
