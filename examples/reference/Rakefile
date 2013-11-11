@@ -1,0 +1,6 @@
+task :default => [:create]
+task :create do
+  files = Dir.glob("*.pde") 
+  files.map{ |dir| FileUtils.mkdir(dir.chomp(File.extname(dir)))}
+end
+
