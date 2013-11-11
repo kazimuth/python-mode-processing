@@ -1,6 +1,5 @@
 def setup():
-	size(300,300, P3D)
-	hint(DISABLE_DEPTH_TEST)
+	size(300,300)
 	smooth()
 	global l
 	l = []
