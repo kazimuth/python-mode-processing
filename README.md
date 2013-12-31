@@ -9,6 +9,8 @@ Inspired by the handsome [processing.py](https://github.com/jdf/processing.py).
 
 This is very much a work-in-progress. Don't expect it to work very well right now.
 
+To download: [Click here!](https://dl.dropboxusercontent.com/u/67110838/PythonMode.zip) (Or clone the repository)
+
 To install: unzip PythonMode.zip into "{your sketch folder}/modes/PythonMode" and restart Processing.
 
 Check build.xml for building instructions.
