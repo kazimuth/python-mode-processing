@@ -2,26 +2,26 @@
 <project name="ProcessingPythonMode" default="release" basedir="./">
 	<!-- Based on mode template http://github.com/martinleopold/TemplateMode -->
 	<!-- Note: now compiles two separate jars- one for python mode, and one that's a wrapper for the processing core that can run python files -->
-	
+
 	<!-- You'll want to change these to compile. -->
-	<property name="processing.base" 			location="C:\Dev\processing-2.0.2-windows64\processing-2.0.2" /> 	<!-- The directory that you unpacked Processing into. -->
-	<property name="processing.sketchfolder" 	location="C:\Dev\Processing" />										<!-- Your sketchbook folder. -->
-	<property name="java.target.bootclasspath"	location="C:\Program Files\Java\jdk1.6.0_38\jre\lib\rt.jar" />		<!-- If you're using a newer jdk -->
-	
+	<property name="processing.base" 		location="/home/james/dev/processing-2.1.1" /> 	<!-- The directory that you unpacked Processing into. -->
+	<property name="processing.sketchfolder" 	location="/home/james/dev/sketchbook" />										<!-- Your sketchbook folder. -->
+	<property name="java.target.bootclasspath"	location="/usr/lib/jvm/java-6-oracle/jre/lib/rt.jar" />		<!-- If you're using a newer jdk -->
+
 	<!-- Leave these be. -->
 	<description>Python Mode for Processing 2.0.</description>
-	
+
 	<property name="lib.name" 	value="PythonMode" />
 	<property name="wrap.name"	value="ProcessingJythonWrapper" />
 	<property name="release" 	value="0.1" />
 	<property name="java.target.version" value="1.6" />
-	
+
 	<property name="src" 		value="src" />
 	<property name="gen"		value="generated" />
 	<property name="build" 		value="build" />
 	<property name="dist" 		value="dist" />
 	<property name="releasedir"	value="release" />
-	
+
 	<property name="lib.path"	value="info/sansgills/mode/python" />
 	<property name="wrap.path"	value="info/sansgills/mode/python/wrapper" />
 	<property name="preproc.path"	value="info/sansgills/mode/python/preproc" />
@@ -30,7 +30,7 @@
 		<fileset dir="${processing.base}/core/library/" > <!-- processing core -->
 			<include name="*.jar" />
 		</fileset>
-		
+
 		<fileset dir="${processing.base}/lib/" > <!-- pde and ant -->
 			<include name="*.jar" />
 		</fileset>
@@ -39,20 +39,20 @@
 			<include name="*.jar" /> <!-- jython and antlr runtime -->
 		</fileset>
 	</path>
-	
+
 	<condition property="gen.present">
 		<available file="${gen}" />
 	</condition>
-	
+
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
 		GET
 	- - - - - - - - - - - - - - - - - - - - - - - -->
 	<target name="get">
 		<mkdir dir="lib" />
 		<mkdir dir="tool" />
-		<get 
-			src="http://search.maven.org/remotecontent?filepath=org/python/jython-standalone/2.7-b1/jython-standalone-2.7-b1.jar" 
-			dest="lib/jython-standalone-2.7-b1.jar" 
+		<get
+			src="http://search.maven.org/remotecontent?filepath=org/python/jython-standalone/2.7-b1/jython-standalone-2.7-b1.jar"
+			dest="lib/jython-standalone-2.7-b1.jar"
 			skipexisting="true"
 			verbose="true" /> <!-- download latest jython (note: update this if jython updates) -->
 		<get
@@ -66,9 +66,9 @@
 			skipexisting="true"
 			verbose="true" /> <!-- download latest ANTLR compiler (to compile our grammars; not included) -->
 	</target>
-	
-	
-	
+
+
+
 	<target name="generate" depends="get" unless="gen.present">
 		<mkdir dir="${gen}" />
 		<java jar="tool/antlr-4.1-complete.jar" fork="true">
@@ -79,17 +79,17 @@
 			<arg value="${basedir}/${src}/${preproc.path}/PyPde.g4" />
 		</java>
 	</target>
-	
-	
+
+
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
 		BUILD
 	- - - - - - - - - - - - - - - - - - - - - - - -->
 	<target name="build" depends="get,generate">
 		<propertyfile file="build.number" /> <!-- create the build.number file if it doesn't exist -->
 		<buildnumber file="build.number" />
-				
+
 		<mkdir dir="${build}" />
-		
+
 		<javac destdir="${build}" source="${java.target.version}" target="${java.target.version}" bootclasspath="${java.target.bootclasspath}" includeantruntime="false" debug="true">
 			<src path="${src}" />
 			<src path="${gen}" />
@@ -97,11 +97,11 @@
 				<path refid="library-classpath"/>
 			</classpath>
 		</javac>
-		
-		
+
+
 		<copy file="${src}/${wrap.path}/prepend.py" tofile="${build}/${wrap.path}/prepend.py" />
 		<copy file="${src}/${wrap.path}/scrub.py" tofile="${build}/${wrap.path}/scrub.py" />
-		
+
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - - - - - -
@@ -112,13 +112,13 @@
 		<property name="bundle" value="${dist}/${lib.name}"/>
 		<mkdir dir="${bundle}" />
 		<mkdir dir="${bundle}/mode" />
-		
+
 		<!-- make mode jar -->
 		<jar jarfile="${bundle}/mode/${lib.name}.jar" basedir="build" includes="${lib.path}/*.class ${preproc.path}/*.class"/>
 		<!-- make wrapper jar -->
 		<jar jarfile="${bundle}/mode/${wrap.name}.jar" basedir="build" includes="${wrap.path}/*"/> <!-- include *.py -->
-		
-		
+
+
 		<copy todir="${bundle}">
 			<fileset dir="resources/" />
 		</copy>
@@ -126,7 +126,7 @@
 		<copy todir="${bundle}/mode">
 			<fileset dir="lib/" />
 		</copy>
-	
+
 		<replaceregexp file="${bundle}/mode.properties" flags="g"
 							   match="@@version@@" replace="${build.number}" />
 		<replaceregexp file="${bundle}/mode.properties" flags="g"
@@ -158,9 +158,9 @@
 		<delete dir="${build}" />
 		<delete dir="${dist}" />
 	</target>
-	
+
 	<target name="cleangen" depends="clean" >
 		<delete dir="${gen}" />
 	</target>
-	
+
 </project>

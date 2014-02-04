@@ -11,15 +11,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 
+ *
  * A class to handle smart-indentation and things. Should really use a proper
  * python parser, will have to find and/or make one.
- * 
+ *
  * So, the Editor class uses a homebrewed text editing panel based on the
  * primordial goo that was to become JEdit (see jedit.org). That class is
  * hardcoded to have a PdeKeyListener managing things; to override stuff, I have
  * to override it.
- * 
+ *
  */
 public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 	PythonEditor peditor;
@@ -27,6 +27,8 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 
 	//ctrl-alt on windows & linux, cmd-alt on os x
 	private static int CTRL_ALT = ActionEvent.ALT_MASK | Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
+  private static final String TAB = "   ";
 
 	public PythonKeyListener(Editor editor, JEditTextArea textarea) {
 		super(editor, textarea);
@@ -37,9 +39,9 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 
 	/*
 	 * Handles special stuff for Java brace indenting & outdenting, etc.
-	 * Overriding it 'cause we do things different here in python-land 
+	 * Overriding it 'cause we do things different here in python-land
 	 * TODO use actual parser; handle spaces
-	 * 
+	 *
 	 */
 	@Override
 	public boolean keyPressed(KeyEvent event) {
@@ -69,8 +71,8 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 		// handle specific keypresses
 		switch (c) {
 
-		case 9: //tab; may do something here later. NOT overriding with spaces- this is python!
-			ptextarea.setSelectedText("\t");
+		case 9: //tab; overriding with spaces
+			ptextarea.setSelectedText(TAB);
 			break;
 
 		case 10: //return
@@ -111,7 +113,7 @@ public class PythonKeyListener extends processing.mode.java.PdeKeyListener {
 			indent = '\n' + f.group();
 
 			if (incIndent.matcher(line).find()) {
-				indent += '\t';
+				indent += TAB;
 			}
 		} else {
 			indent = "\n";
