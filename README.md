@@ -1,3 +1,5 @@
+*This project has been supplanted by the python mode in [Processing.py](https://github.com/kazimuth/processing.py), which I'm working with Jonathan Feinberg on. You should use that!*
+
 Processing Python Mode
 ----------------------
 
